@@ -1,0 +1,8 @@
+/.vs
+/TestResults
+/src/Lib1/bin/
+/src/Lib1/obj/
+/test/Lib1Tests/bin/
+/test/Lib1Tests/obj/
+/test/Lib1Tests/TestResults/
+
