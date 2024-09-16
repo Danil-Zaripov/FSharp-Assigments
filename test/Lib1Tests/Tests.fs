@@ -69,11 +69,6 @@ type TestClass () =
         
         Assert.IsTrue(arrsAreEqual expected actual)
 
-    [<TestMethod>]
-    member this.TestPow2() = 
-        let expected = 8
-        let actual = Lib1.Matrix.pow2 3
-        Assert.AreEqual(expected, actual)
 
     [<TestMethod>]
     member this.TestMatrixFibFunction() = 
@@ -83,3 +78,19 @@ type TestClass () =
             let actual = Lib1.Matrix.fib i
 
             Assert.AreEqual(expected, actual)
+
+    [<TestMethod>]
+    member this.TestFunctionalBubbleSort() = 
+        let testArr = [|1; 4; 6; 3; 2; 100; -23; 23; -1|]
+
+        let expected = testArr |> Array.sort
+
+        let actual = testArr |> Lib1.Say.bubbleSort1
+
+        let arrsAreEqual (arr1: 'a array) (arr2: 'a array) =
+            if arr1.Length = arr2.Length then
+                Array.forall2 (=) arr1 arr2
+            else false
+            
+                
+        Assert.IsTrue(arrsAreEqual expected actual)

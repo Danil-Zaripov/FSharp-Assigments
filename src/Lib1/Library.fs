@@ -9,7 +9,6 @@ module Say =
 
 
     let bubbleSort (arr: 'a array) =
-        let mutable arr = arr
         let len = arr |> Array.length
         for i in 0 .. len - 1 do
             for j in 1 .. len - 1 do
@@ -22,8 +21,23 @@ module Say =
     let factorial n = 
         let product = List.fold (fun st x -> x * st) 1
         product [1..n]
- 
-        
+
+    let rec funcBubbleSort (arr: 'a list) = 
+        let rec _f arr = // Puts into place the greatest element that is not sorted
+            match arr with
+                | p1 :: p2 :: rest ->
+                    if p1 > p2 then 
+                        p2 :: ((p1 :: rest) |> funcBubbleSort)
+                    else 
+                        p1 :: ((p2 :: rest) |> funcBubbleSort)
+                | _ -> arr
+
+        List.fold (fun acc _ -> _f acc) arr arr // applies the function above to the list arr.Length times
+
+    let bubbleSort1 arr =
+        arr |> Array.toList |> funcBubbleSort |> List.toArray
+
+
  module Matrix = 
     let empty = 0
     
@@ -50,17 +64,13 @@ module Say =
 
         _f List.empty n |> List.toArray
 
-    let powi n p = 
-        let mutable ret = 1
-        for i in 1 .. p do
-            ret <- ret * n
-        ret
-   
-    let pow2 = powi 2
+
     let Qmatrix = 
         array2D [[1;1];[1;0]]
+
     let identityMatrix = 
         array2D [[1;0];[0;1]]
+
     let formArrayOfMatrices n = 
         let mutable arr: (int array2d) array = Array.init n (fun _ -> Array2D.init 2 2 (fun _ _ -> 0))
        
@@ -81,4 +91,4 @@ module Say =
 
         let final_matrix = Array.fold2 _folder identityMatrix array_of_mat inclusion
 
-        final_matrix[0,1]
+        final_matrix[0,1] // 0,0 is next fib; 0,1 and 1,0 is current fib; 1,1 is previous fib
