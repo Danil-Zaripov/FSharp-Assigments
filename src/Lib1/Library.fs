@@ -1,9 +1,6 @@
 ﻿namespace Learning
 
 module Say =
-<<<<<<< HEAD
-    let hello_world = "Hello, world!"
-=======
     let fib n = 
         let rec _fib p1 p2 cnt = 
             if cnt = 1 then p2
@@ -105,10 +102,9 @@ module QuickSort =
 
     let getMedian starting ending = 
         let len = ending - starting + 1
-        let med = len / 2 + len % 2
+        let med = len / 2
         starting + med
 
 
     let quickSort arr = 
-            0
->>>>>>> f7ed1e5 (Implemented swap and getMedian fucntions for an upcoming quickSort)
+        0
