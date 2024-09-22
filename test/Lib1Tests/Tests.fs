@@ -89,3 +89,13 @@ type TestClass () =
 
         Assert.AreEqual(expected, actual)
         
+    [<TestMethod>]
+    member this.TestQuickSort() =
+        let testArr = [|1; 4; 6; 3; 2; 100; -23; 23; -1|]
+
+        let expected = testArr |> Array.sort
+
+        let actual = testArr |> Learning.QuickSort.quickSort
+            
+                
+        CollectionAssert.AreEqual(expected, actual)

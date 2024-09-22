@@ -105,6 +105,29 @@ module QuickSort =
         let med = len / 2
         starting + med
 
+    let partition (arr: 'a array) low high = 
+        let pivot = arr[high]
 
-    let quickSort arr = 
-        0
+        let mutable i = low - 1;
+
+        for j in low .. high - 1 do 
+            if arr[j] < pivot then 
+                i <- i + 1
+
+                swap &arr[i] &arr[j]
+
+        swap &arr[i + 1] &arr[high]
+        arr, i + 1
+
+    let quickSort (arr: 'a array) = 
+        let rec _quickSort (arr: 'a array) low high = 
+            if low < high then 
+           
+               let (arr, piv) = partition arr low high
+
+               let arr = _quickSort arr low (piv - 1) 
+               let arr = _quickSort arr (piv + 1) high
+               arr
+            else arr
+
+        _quickSort arr 0 (arr.Length - 1)
