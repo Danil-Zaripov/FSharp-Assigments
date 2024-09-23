@@ -12,15 +12,14 @@ type TestClass () =
         let testArr = [|1; 4; 6; 3; 2; 100; -23; 23; -1|]
 
         let expected = testArr |> Array.sort
-
-        let actual = testArr |> Learning.Say.bubbleSort
+        let actual = testArr |> Learning.Basic.bubbleSort
             
                 
         CollectionAssert.AreEqual(expected, actual)
 
     [<TestMethod>]
     member this.TestFactorial() = 
-        let actual = Learning.Say.factorial 5
+        let actual = Learning.Basic.factorial 5
         let expected = 120
 
         Assert.AreEqual(actual, expected)
@@ -47,8 +46,8 @@ type TestClass () =
 
     [<TestMethod>]
     member this.TestToBinary() = 
-        let expected = [| 1; 0; 1; |]
-        let actual   = Learning.Matrix.toBinary (4 + 1)
+        let expected = [| 1; 0; 1; 1; 0; |]
+        let actual   = Learning.Matrix.toBinary (16 + 0 + 4 + 2 + 0)
         CollectionAssert.AreEqual(expected, actual)
 
 
@@ -56,7 +55,7 @@ type TestClass () =
     member this.TestMatrixFibFunction() = 
         for i in 1 .. 10 do
 
-            let expected = Learning.Say.fib i
+            let expected = Learning.Basic.fib i
             let actual = Learning.Matrix.fib i
 
             Assert.AreEqual(expected, actual)
@@ -67,7 +66,7 @@ type TestClass () =
 
         let expected = testArr |> Array.sort
 
-        let actual = testArr |> Learning.Say.bubbleSort1
+        let actual = testArr |> Learning.Basic.bubbleSort1
 
         CollectionAssert.AreEqual(expected, actual)
 
@@ -77,19 +76,11 @@ type TestClass () =
         let arr = [|1;2;3|]
         let expected = [|3;2;1|]
         let actual = arr
-        Learning.QuickSort.swap &actual[0] &actual[2];
+        Learning.Basic.swap &actual[0] &actual[2];
+
         
         CollectionAssert.AreEqual(expected, actual)
 
-    [<TestMethod>]
-    member this.TestGetMedian() = 
-        let data = [(0, 6); (0, 1); (0, 100); (3, 4); (3, 3)]
-        let expected = [3; 1; 50; 4; 3]
-        let actual = data |> List.map (fun (a,b) -> Learning.QuickSort.getMedian a b)
-
-        Assert.AreEqual(expected, actual)
-        
-    [<TestMethod>]
     member this.TestQuickSort() =
         let testArr = [|1; 4; 6; 3; 2; 100; -23; 23; -1|]
 

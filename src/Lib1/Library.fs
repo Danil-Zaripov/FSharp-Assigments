@@ -1,6 +1,12 @@
 ﻿namespace Learning
 
-module Say =
+module Basic =
+
+    let swap (left : 'a byref) (right : 'a byref) =
+        let temp = left
+        left <- right
+        right <- temp
+
     let fib n = 
         let rec _fib p1 p2 cnt = 
             if cnt = 1 then p2
@@ -13,9 +19,7 @@ module Say =
         for i in 0 .. len - 1 do
             for j in 1 .. len - 1 do
                 if arr[j] < arr[j - 1] then
-                    let c = arr[j]
-                    arr[j] <- arr[j-1]
-                    arr[j-1] <- c
+                    swap &arr[j] &arr[j - 1]
         arr
     
     let factorial n = 
@@ -39,9 +43,11 @@ module Say =
 
 
  module Matrix = 
-    let empty = 0
-    
-    let product2_2 (mat1: 'a array2d) (mat2: 'a array2d) =
+    let f<'a> x y = 
+        (x, y)
+
+
+    let product2_2 (mat1: int array2d) (mat2: int array2d) =
         array2D [|
             [|
                 mat1[0,0] * mat2[0, 0] + mat1[0,1] * mat2[1,0]
@@ -95,15 +101,6 @@ module Say =
     
     
 module QuickSort =
-    let swap (left : 'a byref) (right : 'a byref) =
-        let temp = left
-        left <- right
-        right <- temp
-
-    let getMedian starting ending = 
-        let len = ending - starting + 1
-        let med = len / 2
-        starting + med
 
     let partition (arr: 'a array) low high = 
         let pivot = arr[high]
@@ -114,9 +111,9 @@ module QuickSort =
             if arr[j] < pivot then 
                 i <- i + 1
 
-                swap &arr[i] &arr[j]
+                Basic.swap &arr[i] &arr[j]
 
-        swap &arr[i + 1] &arr[high]
+        Basic.swap &arr[i + 1] &arr[high]
         arr, i + 1
 
     let quickSort (arr: 'a array) = 
