@@ -1,7 +1,6 @@
 ﻿namespace Learning
 
 module Basic =
-
     let swap (left : 'a byref) (right : 'a byref) =
         let temp = left
         left <- right
@@ -43,10 +42,6 @@ module Basic =
 
 
  module Matrix = 
-    let f<'a> x y = 
-        (x, y)
-
-
     let product2_2 (mat1: int array2d) (mat2: int array2d) =
         array2D [|
             [|

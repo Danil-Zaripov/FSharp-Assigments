@@ -8,6 +8,13 @@ open Microsoft.VisualStudio.TestTools.UnitTesting
 [<TestClass>]
 type TestClass () =
     [<TestMethod>]
+    member this.TestFactorial() =
+        let expected = 120
+        let actual = Lib1.Basic.factorial 5 
+        
+        Assert.AreEqual(expected, actual)
+
+    [<TestMethod>]
     member this.TestBubbleSort() = 
         let testArr = [|1; 4; 6; 3; 2; 100; -23; 23; -1|]
 
