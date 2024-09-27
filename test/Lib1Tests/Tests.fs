@@ -10,7 +10,7 @@ type TestClass () =
     [<TestMethod>]
     member this.TestFactorial() =
         let expected = 120
-        let actual = Lib1.Basic.factorial 5 
+        let actual = Learning.Basic.factorial 5 
         
         Assert.AreEqual(expected, actual)
 
@@ -24,12 +24,6 @@ type TestClass () =
                 
         CollectionAssert.AreEqual(expected, actual)
 
-    [<TestMethod>]
-    member this.TestFactorial() = 
-        let actual = Learning.Basic.factorial 5
-        let expected = 120
-
-        Assert.AreEqual(actual, expected)
 
     [<TestMethod>]
     member this.TestMatrixProduct() = 
