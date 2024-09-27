@@ -1,4 +1,4 @@
-namespace Lib1Tests
+namespace LearningTests
 
 open System
 open Microsoft.VisualStudio.TestTools.UnitTesting
@@ -11,6 +11,6 @@ type TestClass () =
     [<TestMethod>]
     member this.TestHelloWorld() = 
         let expected = "Hello, world!"
-        let actual = Lib1.Say.hello_world
+        let actual = Learning.Say.hello_world
 
         Assert.AreEqual(expected, actual)
