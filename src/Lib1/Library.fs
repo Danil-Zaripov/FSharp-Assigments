@@ -27,22 +27,6 @@ module Basic =
         let product = List.fold (fun st x -> x * st) 1
         product [ 1..n ]
 
-    let rec funcBubbleSort (arr: 'a list) =
-        let rec _f arr = // Puts into place the greatest element that is not sorted
-            match arr with
-            | p1 :: p2 :: rest ->
-                if p1 > p2 then
-                    p2 :: ((p1 :: rest) |> funcBubbleSort)
-                else
-                    p1 :: ((p2 :: rest) |> funcBubbleSort)
-            | _ -> arr
-
-        List.fold (fun acc _ -> _f acc) arr arr // applies the function above to the list arr.Length times
-
-    let bubbleSort1 arr =
-        arr |> Array.toList |> funcBubbleSort |> List.toArray
-
-
 module Matrix =
     let product2_2 (mat1: int array2d) (mat2: int array2d) =
         array2D

@@ -60,17 +60,6 @@ type TestClass () =
             let actual = Learning.Matrix.fib i
 
             Assert.AreEqual(expected, actual)
-        
-    [<TestMethod>]
-    member this.TestFunctionalBubbleSort() = 
-        let testArr = [|1; 4; 6; 3; 2; 100; -23; 23; -1|]
-
-        let expected = testArr |> Array.sort
-
-        let actual = testArr |> Learning.Basic.bubbleSort1
-
-        CollectionAssert.AreEqual(expected, actual)
-
 
     [<TestMethod>]
     member this.TestSwapFunction() =
