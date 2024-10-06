@@ -8,9 +8,15 @@ open Microsoft.VisualStudio.TestTools.UnitTesting
 [<TestClass>]
 type TestClass () =
 
-    [<TestMethod>]
-    member this.TestHelloWorld() = 
-        let expected = "Hello, world!"
-        let actual = Learning.Say.hello_world
-
-        Assert.AreEqual(expected, actual)
+    [<TestMethod>] 
+    member this.TestBubbleSort() = 
+        let rand = Random()
+        let array = 
+            [|
+                for i in 0 .. rand.Next(10, 100) do 
+                    rand.Next(-100, 100)
+            |]
+        let expected = array |> Array.sort
+        let actual   = array |> Learning.Sorts.bubbleSort
+        
+        CollectionAssert.AreEqual(expected, actual)
