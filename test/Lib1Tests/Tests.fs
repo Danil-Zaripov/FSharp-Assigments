@@ -22,6 +22,14 @@ type TestClass () =
                 rand.Next(-100, 100)
         |]
 
+    [<TestMethod>]
+    member this.DivideFunctionTest() = 
+        let tests = [ (0, 3); (0, 1); (1, 3); (1, 4) ]
+        let expected = [ ((0, 1), (2, 3)); ((0, 0), (1, 1)); ((1, 1), (2, 3)); ((1, 2), (3, 4)) ]
+        let actual = tests |> List.map Learning.Sorts.divide_two_halves
+
+        Assert.AreEqual(expected, actual)
+        
 
     [<TestMethod>] 
     member this.TestBubbleSort() = 
@@ -32,3 +40,9 @@ type TestClass () =
     member this.TestQuickSort() = 
         for _ in 1..50 do
             this.CheckSortingAlgorithm (this.GenerateRandomArray()) Learning.Sorts.quickSort
+
+    [<TestMethod>]
+    member this.TestMergeSort() = 
+        for _ in 1..50 do
+            this.CheckSortingAlgorithm (this.GenerateRandomArray()) Learning.Sorts.mergeSort
+
