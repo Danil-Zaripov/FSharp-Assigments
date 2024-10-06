@@ -41,4 +41,38 @@ module Sorts =
                 arr
 
         _quickSort arr 0 (arr.Length - 1)
-    
+
+    let divide_two_halves (left, right) =
+        let length = right - left + 1 // end-inclusive
+        let half_length = length / 2
+
+        (left, left + half_length - 1), (left + half_length, right)
+
+    let mergeSort arr = 
+        
+        let _merge (arr1: 'a array) (arr2: 'a array) = 
+            let final = Array.zeroCreate (arr1.Length + arr2.Length)
+            let mutable fp = 0
+            let mutable sp = 0
+            for i in 0..final.Length - 1 do 
+                if fp >= arr1.Length then  
+                    final[i] <- arr2[sp]
+                    sp <- sp + 1
+                elif sp >= arr2.Length then 
+                    final[i] <- arr1[fp]
+                    fp <- fp + 1
+                elif (arr1[fp] <= arr2[sp]) then
+                    final[i] <- arr1[fp] 
+                    fp <- fp + 1
+                else 
+                    final[i] <- arr2[sp]
+                    sp <- sp + 1
+            final
+
+        let rec _mergeSort (arr: 'a array) = 
+            if arr.Length <= 1 then 
+                arr
+            else
+                let (f1, f2), (s1, s2) = divide_two_halves (0, arr.Length - 1)
+                _merge (_mergeSort arr[f1..f2]) (_mergeSort arr[s1..s2])
+        _mergeSort arr
