@@ -6,24 +6,31 @@ module Sorts =
         left <- right
         right <- temp
 
-    let bubbleSort (arr: 'a array) =
-        let len = arr |> Array.length
+    let ascendingOrderCompare a b =
+        a < b
+    let descendingOrderCompare a b =
+        b < a
+
+    let bubbleSortGeneral (arr: 'a array) compare = 
+        let len = arr.Length
 
         for i in 0 .. len - 1 do
             for j in 1 .. len - 1 do
-                if arr[j] < arr[j - 1] then
-                    swap &arr[j] &arr[j - 1]
+                if compare arr[j] arr[j-1] then
+                    swap &arr[j-1] &arr[j]
 
         arr
 
-    let quickSort (arr: 'a array) =
+
+    let quickSortGeneral (arr: 'a array) compare =
         let partition (arr: 'a array) low high =
             let pivot = arr[high]
 
             let mutable i = low - 1
 
             for j in low .. high - 1 do
-                if arr[j] < pivot then
+                if compare arr[j] pivot then
+
                     i <- i + 1
 
                     swap &arr[i] &arr[j]
@@ -48,7 +55,7 @@ module Sorts =
 
         (left, left + half_length - 1), (left + half_length, right)
 
-    let mergeSort arr = 
+    let mergeSortGeneral arr compare = 
         
         let _merge (arr1: 'a array) (arr2: 'a array) = 
             let final = Array.zeroCreate (arr1.Length + arr2.Length)
@@ -61,7 +68,7 @@ module Sorts =
                 elif sp >= arr2.Length then 
                     final[i] <- arr1[fp]
                     fp <- fp + 1
-                elif (arr1[fp] <= arr2[sp]) then
+                elif compare arr1[fp] arr2[sp] then
                     final[i] <- arr1[fp] 
                     fp <- fp + 1
                 else 
@@ -76,3 +83,9 @@ module Sorts =
                 let (f1, f2), (s1, s2) = divide_two_halves (0, arr.Length - 1)
                 _merge (_mergeSort arr[f1..f2]) (_mergeSort arr[s1..s2])
         _mergeSort arr
+
+    let ascendingSort (sort: 'a array -> ('a -> 'a -> bool) -> 'a array) arr = 
+        ascendingOrderCompare |> sort arr
+
+    let descendingSort (sort: 'a array -> ('a -> 'a -> bool) -> 'a array) arr = 
+        descendingOrderCompare |> sort arr
