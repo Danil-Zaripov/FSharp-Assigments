@@ -9,20 +9,19 @@ open Microsoft.VisualStudio.TestTools.UnitTesting
 type TestClass () =
     [<TestMethod>]
     member this.TestFactorial() =
-        let expected = 120
-        let actual = Learning.Basic.factorial 5 
+        let expected = [ 1;2;6;24;120;720]
+        let actual = [ 1..6 ] |> List.map Learning.Basic.factorial
+                
         
         Assert.AreEqual(expected, actual)
-
     [<TestMethod>]
-    member this.TestBubbleSort() = 
-        let testArr = [|1; 4; 6; 3; 2; 100; -23; 23; -1|]
+    member this.TestBasicFib() =
+        let expected = 
+            [ 1; 1; 2; 3; 5; 8; 13; 21; 34; 55; 89 ]
+        let actual = [ 1 .. 11 ] |> List.map Learning.Basic.fib
 
-        let expected = testArr |> Array.sort
-        let actual = testArr |> Learning.Basic.bubbleSort
-            
-                
-        CollectionAssert.AreEqual(expected, actual)
+        Assert.AreEqual(expected, actual)
+        
 
 
     [<TestMethod>]
@@ -46,10 +45,23 @@ type TestClass () =
         CollectionAssert.AreEqual(actual, expected)
 
     [<TestMethod>]
-    member this.TestToBinary() = 
-        let expected = [| 1; 0; 1; 1; 0; |]
-        let actual   = Learning.Matrix.toBinary (16 + 0 + 4 + 2 + 0)
-        CollectionAssert.AreEqual(expected, actual)
+    member this.TestToBinary() =
+        let expected = [
+            [|1;1;1;1;1|]
+            [|1|]
+            [|1; 1|]
+            [|1;1;0|]
+            [|1;0;0;0;0|]
+        ]
+        let actual   = List.map Learning.Matrix.toBinary [
+            16 + 8 + 4 + 2 + 1
+            1
+            1 + 2
+            2 + 4
+            16
+        ]
+
+        (expected, actual) ||> List.zip  |> List.iter CollectionAssert.AreEqual
 
 
     [<TestMethod>]
@@ -63,20 +75,31 @@ type TestClass () =
 
     [<TestMethod>]
     member this.TestSwapFunction() =
-        let arr = [|1;2;3|]
-        let expected = [|3;2;1|]
+        let arr = [|1;2;3;4;5;6;10;8;9;7|]
+        let expected = [|1..10|]
         let actual = arr
-        Learning.Basic.swap &actual[0] &actual[2];
+        Learning.Basic.swap &actual[6] &actual[9];
 
         
         CollectionAssert.AreEqual(expected, actual)
 
-    member this.TestQuickSort() =
-        let testArr = [|1; 4; 6; 3; 2; 100; -23; 23; -1|]
+    member this.CheckSortingAlgorithm arr algorithm =
+        let expected = arr |> Array.copy |> Array.sort
+        let actual = arr |> Array.copy |> algorithm
 
-        let expected = testArr |> Array.sort
-
-        let actual = testArr |> Learning.QuickSort.quickSort
-            
-                
         CollectionAssert.AreEqual(expected, actual)
+
+    member this.GenerateRandomArray() =
+        let rand = Random()
+
+        [| for i in 0 .. rand.Next(10, 100) do
+               rand.Next(-100, 100) |]
+
+    [<TestMethod>]
+    member this.TestBubbleSort() =
+        for _ in 1..50 do 
+            this.CheckSortingAlgorithm (this.GenerateRandomArray()) Learning.Basic.bubbleSort
+    [<TestMethod>]
+    member this.TestQuickSort() =
+        for _ in 1..50 do 
+            this.CheckSortingAlgorithm (this.GenerateRandomArray()) Learning.QuickSort.quickSort
