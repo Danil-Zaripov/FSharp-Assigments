@@ -17,6 +17,7 @@ module Sorts =
     let descendingOrderCompare a b = b < a
 
     let bubbleSortGeneral (arr: 'a array) compare =
+        let arr = arr |> Array.copy
         let len = arr.Length
 
         for i in 0 .. len - 1 do
@@ -28,6 +29,8 @@ module Sorts =
 
 
     let quickSortGeneral (arr: 'a array) compare =
+        let arr = arr |> Array.copy
+
         let partition (arr: 'a array) low high =
             let pivot = arr[high]
 
@@ -56,6 +59,7 @@ module Sorts =
         _quickSort arr 0 (arr.Length - 1)
 
     let mergeSortGeneral arr compare =
+        let arr = arr |> Array.copy
 
         let _merge (arr1: 'a array) (arr2: 'a array) =
             let final = Array.zeroCreate (arr1.Length + arr2.Length)
@@ -90,3 +94,4 @@ module Sorts =
     let ascendingSort (sort: 'a array -> ('a -> 'a -> bool) -> 'a array) arr = ascendingOrderCompare |> sort arr
 
     let descendingSort (sort: 'a array -> ('a -> 'a -> bool) -> 'a array) arr = descendingOrderCompare |> sort arr
+    

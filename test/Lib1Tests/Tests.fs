@@ -7,16 +7,15 @@ open Learning
 
 [<TestClass>]
 type TestClass() =
-
     member this.CheckSortingAlgorithmAscending arr algorithm =
-        let expected = arr |> Array.copy |> Array.sort
-        let actual = arr |> Array.copy |> (Sorts.ascendingSort algorithm)
+        let expected = arr |> Array.sort
+        let actual = arr |> (Sorts.ascendingSort algorithm)
 
         CollectionAssert.AreEqual(expected, actual)
 
     member this.CheckSortingAlgorithmDescending arr algorithm =
-        let expected = arr |> Array.copy |> Array.sort |> Array.rev
-        let actual = arr |> Array.copy |> (Sorts.descendingSort algorithm)
+        let expected = arr |> Array.sort |> Array.rev
+        let actual = arr |> (Sorts.descendingSort algorithm)
 
         CollectionAssert.AreEqual(expected, actual)
 
