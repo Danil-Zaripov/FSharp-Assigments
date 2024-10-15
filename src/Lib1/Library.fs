@@ -12,7 +12,6 @@ module Basic =
 
         _fib 0 1 n
 
-
     let bubbleSort (arr: 'a array) =
         let len = arr |> Array.length
 
@@ -43,7 +42,6 @@ module Matrix =
 
         _f List.empty n |> List.toArray
 
-
     let Qmatrix = array2D [ [ 1; 1 ]; [ 1; 0 ] ]
 
     let identityMatrix = array2D [ [ 1; 0 ]; [ 0; 1 ] ]
@@ -53,7 +51,6 @@ module Matrix =
             Array.init n (fun _ -> Array2D.init 2 2 (fun _ _ -> 0))
 
         arr[0] <- Qmatrix
-
         for i in 1 .. n - 1 do
             arr[i] <- sqrMat arr[i - 1]
 
@@ -61,7 +58,7 @@ module Matrix =
 
     let fib n =
         let inclusion =
-            n |> toBinary |> Array.rev |> Array.map (fun x -> if x > 0 then true else false)
+            n |> toBinary |> Array.rev |> Array.map System.Convert.ToBoolean
 
         let array_of_mat = inclusion.Length |> formArrayOfMatrices
 
@@ -71,29 +68,25 @@ module Matrix =
 
         final_matrix[0, 1] // 0,0 is next fib; 0,1 and 1,0 is current fib; 1,1 is previous fib
 
-
 module QuickSort =
-
-    let partition (arr: 'a array) low high =
-        let pivot = arr[high]
-
-        let mutable i = low - 1
-
-        for j in low .. high - 1 do
-            if arr[j] < pivot then
-                i <- i + 1
-
-                Basic.swap &arr[i] &arr[j]
-
-        Basic.swap &arr[i + 1] &arr[high]
-        arr, i + 1
-
     let quickSort (arr: 'a array) =
+        let partition (arr: 'a array) low high =
+            let pivot = arr[high]
+
+            let mutable i = low - 1
+
+            for j in low .. high - 1 do
+                if arr[j] < pivot then
+                    i <- i + 1
+
+                    Basic.swap &arr[i] &arr[j]
+
+            Basic.swap &arr[i + 1] &arr[high]
+            arr, i + 1
+
         let rec _quickSort (arr: 'a array) low high =
             if low < high then
-
                 let (arr, piv) = partition arr low high
-
                 let arr = _quickSort arr low (piv - 1)
                 let arr = _quickSort arr (piv + 1) high
                 arr
@@ -101,3 +94,4 @@ module QuickSort =
                 arr
 
         _quickSort arr 0 (arr.Length - 1)
+    
