@@ -36,6 +36,25 @@ type TestClass() =
 
         Assert.AreEqual(expected, actual)
 
+
+    member this.TestSortingAlgorithmEmpty alg =
+        let expected = [||]
+        let actual = [||] |> (Sorts.ascendingSort Sorts.bubbleSortGeneral)
+
+        CollectionAssert.AreEqual(expected, actual)
+
+    [<TestMethod>]
+    member this.CheckBubbleSortEmpty() =
+        this.TestSortingAlgorithmEmpty Sorts.bubbleSortGeneral
+
+    [<TestMethod>]
+    member this.CheckQuickSortEmpty() =
+        this.TestSortingAlgorithmEmpty Sorts.quickSortGeneral
+
+    [<TestMethod>]
+    member this.CheckMergeSortEmpty() =
+        this.TestSortingAlgorithmEmpty Sorts.mergeSortGeneral
+
     [<TestMethod>]
     member this.TestBubbleSortAscending() =
         for _ in 1..50 do
