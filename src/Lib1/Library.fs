@@ -19,7 +19,7 @@ module ListSorts =
         | x :: xs ->
             let smaller = List.filter ((>) x) xs
             let bigger = List.filter ((<=) x) xs
-            (quickSort smaller) @ [ x ] @ (quickSort bigger)
+            (quickSort smaller) @ x :: (quickSort bigger)
 
     let rec mergeSort lst =
         let rec _merge =
@@ -29,9 +29,7 @@ module ListSorts =
                     x :: (_merge (xs, y :: ys))
                 else
                     y :: (_merge (x :: xs, ys))
-            | ([], y :: ys) -> y :: ys
-            | (x :: xs, []) -> x :: xs
-            | ([], []) -> []
+            | (xs, ys) -> max xs ys // max([], lst) = lst // for any lst
 
         match lst with
         | p1 :: p2 :: rest ->
