@@ -3,4 +3,4 @@
 open Xunit
 
 module UnitTests =
-    let placeholder() = ()
+    let placeholder () = ()

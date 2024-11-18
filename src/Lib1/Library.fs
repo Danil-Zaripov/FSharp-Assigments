@@ -41,7 +41,7 @@ module ListSorts =
             _merge (mergeSort l1, mergeSort l2)
         | _ -> lst
 
-module ArraySorts = 
+module ArraySorts =
     let swap (left: 'a byref) (right: 'a byref) =
         let temp = left
         left <- right
@@ -83,13 +83,13 @@ module ArraySorts =
 
         _quickSort arr 0 (arr.Length - 1)
 
-    
+
     let divide_two_halves (left, right) =
         let length = right - left + 1 // end-inclusive
         let half_length = length / 2
 
         (left, left + half_length - 1), (left + half_length, right)
-    
+
     let mergeSort arr =
         let arr = arr |> Array.copy
 
