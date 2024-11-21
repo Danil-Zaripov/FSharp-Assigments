@@ -6,7 +6,8 @@ module UnitTests =
     let testCases = [ []; [ 1; 2; 3; 4; 5 ]; [ 5; 4; 3; 2; 1 ] ]
 
     let checkForTestCases alg =
-        let algorithmWorks xs = (List.sort xs) = (alg xs)
+        let algorithmWorks xs =
+            (List.sort xs) = (Learning.MyList.bind alg xs)
 
         testCases |> List.map algorithmWorks |> List.reduce (&&)
 
