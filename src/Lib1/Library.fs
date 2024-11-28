@@ -21,15 +21,22 @@ module ListSorts =
             let bigger = List.filter ((<=) x) xs
             (quickSort smaller) @ x :: (quickSort bigger)
 
+
+
     let rec mergeSort lst =
-        let rec _merge =
-            function
-            | (x :: xs, y :: ys) ->
-                if x < y then
-                    x :: (_merge (xs, y :: ys))
-                else
-                    y :: (_merge (x :: xs, ys))
-            | (xs, ys) -> max xs ys // max([], lst) = lst // for any lst
+        let merge l1 l2 =
+            let rec _merge lst1 lst2 res =
+                match lst1, lst2 with
+                | [], [] -> List.rev res
+                | [], hd :: tl
+                | hd :: tl, [] -> _merge [] [] ((List.rev (hd :: tl)) @ res)
+                | x :: xs, y :: ys ->
+                    if (x < y) then
+                        _merge (xs) (y :: ys) (x :: res)
+                    else
+                        _merge (x :: xs) (ys) (y :: res)
+
+            _merge l1 l2 []
 
         match lst with
         | p1 :: p2 :: rest ->
@@ -38,7 +45,7 @@ module ListSorts =
                 let p1, p2 = (chunks |> List.head, chunks |> List.tail |> List.exactlyOne)
                 p1, p2
 
-            _merge (mergeSort l1, mergeSort l2)
+            merge (mergeSort l1) (mergeSort l2)
         | _ -> lst
 
 module ArraySorts =
