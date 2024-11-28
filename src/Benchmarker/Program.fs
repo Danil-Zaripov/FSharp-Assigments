@@ -1,67 +1,76 @@
 ﻿module Program
 
 open System
+open System.Threading
 open Learning
 open BenchmarkDotNet.Attributes
 open BenchmarkDotNet.Running
 
 
+[<MemoryDiagnoser>]
+[<SimpleJob(launchCount = 1, iterationCount = 1, warmupCount = 1)>]
 type ListSortBenchmarking() =
-    class
-        let rand = Random()
-        let data = [ 1..2 ] |> List.map (fun _ -> rand.Next(-1e8 |> int, 1e8 |> int))
+    let rand = Random()
 
-        [<Benchmark>]
-        member this.bubbleSort() = ListSorts.bubbleSort data
+    member public this._elemCounts = [| 10000..10000..100000 |]
 
-        [<Benchmark>]
-        member this.quickSort() = ListSorts.quickSort data
+    [<ParamsSource("_elemCounts")>]
+    member val elemCount = 0 with get, set
 
-        [<Benchmark>]
-        member this.mergeSort() = ListSorts.mergeSort data
-    end
+    member val data = [ 1 ] with get, set
 
+    [<IterationSetup>]
+    member this.initData() =
+        this.data <- [ 1 .. this.elemCount ] |> List.map (fun _ -> rand.Next(-100000, 100000))
 
 
+    //[<Benchmark>]
+    //member this.bubbleSort() = ListSorts.bubbleSort this.data
+
+    [<Benchmark>]
+    member this.quickSort() = ListSorts.quickSort this.data
+
+    [<Benchmark>]
+    member this.mergeSort() = ListSorts.mergeSort this.data
+
+    [<Benchmark(Baseline = true)>]
+    member this.systemSort() = List.sort this.data
+
+[<MemoryDiagnoser>]
+[<SimpleJob(launchCount = 1, iterationCount = 1, warmupCount = 1)>]
+type ArraySortBenchmarking() =
+    let rand = Random()
+
+    member public this._elemCounts = [| 10000..10000..20000 |]
+
+    [<ParamsSource("_elemCounts")>]
+    member val elemCount = 0 with get, set
+
+    member val data = [| 1 |] with get, set
+
+    [<IterationSetup>]
+    member this.initData() =
+        this.data <- [| 1 .. this.elemCount |] |> Array.map (fun _ -> rand.Next(-100000, 100000))
+
+    //[<Benchmark>]
+    //member this.bubbleSort() = ArraySorts.bubbleSort this.data
+
+    [<Benchmark>]
+    member this.quickSort() = ArraySorts.quickSort this.data
+
+    [<Benchmark>]
+    member this.mergeSort() = ArraySorts.mergeSort this.data
+
+    [<Benchmark(Baseline = true)>]
+    member this.systemSort() = Array.sort this.data
 
 [<EntryPoint>]
-let main _ =
-    let dataSizeModifier = [ 5; 10; 20; 30; 40; 50; 100; 500; 1000; 1500 ]
+let main args =
+    //let summary = BenchmarkRunner.Run<ArraySortBenchmarking>()
 
-    let we_want_to_do () =
-        let rand = Random()
+    let switcher =
+        BenchmarkSwitcher [| typeof<ListSortBenchmarking>; typeof<ArraySortBenchmarking> |]
 
-        let algorithms =
-            [
-              //ListSorts.bubbleSort, "bubbleSort"
-              ListSorts.quickSort, "quickSort"
-              ListSorts.mergeSort, "mergeSort"
-              List.sort, "List.sort" ]
-
-        let step = 1e3 |> int
-
-        let iteration _ =
-            let n = step * 75
-            let lst = [ 1..n ] |> List.map (fun _ -> rand.Next(-1e8 |> int, 1e8 |> int))
-            let watch = System.Diagnostics.Stopwatch.StartNew()
-            let sorted = ListSorts.mergeSort lst
-            watch.Stop()
-            watch.ElapsedMilliseconds
-
-        let results = [ 1..300 ] |> List.map iteration
-        let avg = results |> List.map double |> List.average
-        printfn $"Average: {avg}"
-        let str = results |> List.map (fun x -> sprintf $"{x} ") |> Seq.reduce (+)
-
-        let path = @"./Data.txt"
-        let file = System.IO.File.WriteAllText(path, str.TrimEnd())
-        ()
-
-    let thread = Threading.Thread(we_want_to_do, 2e8 |> int32)
-
-    thread.Start()
-
-    while thread.IsAlive do
-        Threading.Thread.Sleep(2000)
+    switcher.Run args |> ignore
 
     0
