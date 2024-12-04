@@ -93,7 +93,7 @@ let main args =
             cultureInfo = CultureInfo.InvariantCulture,
             printUnitsInHeader = true,
             printUnitsInContent = false,
-            timeUnit = TimeUnit.Millisecond, // Seconds for slow sorts // Milliseconds for fast sorts
+            timeUnit = TimeUnit.Second, // Seconds for slow sorts // Milliseconds for fast sorts
             sizeUnit = SizeUnit.MB
         )
 
