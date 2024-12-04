@@ -1,17 +1,28 @@
 ﻿module Learning
 
 module ListSorts =
-    let bubbleSort lst =
-        let rec _bubbleSort =
-            function
-            | p1 :: p2 :: rest ->
-                if p1 > p2 then
-                    p2 :: (_bubbleSort (p1 :: rest))
-                else
-                    p1 :: (_bubbleSort (p2 :: rest))
-            | rest -> rest
 
-        List.fold (fun acc _ -> _bubbleSort acc) lst lst
+    let rec insertSorted =
+        function
+        | (x :: xs, v) when v > x -> x :: (insertSorted (xs, v))
+        | (lst, v) -> v :: lst
+
+    let rec insertionSort =
+        function
+        | [] -> []
+        | x :: xs -> insertSorted ((insertionSort xs), x)
+
+
+    let bubbleSort lst =
+        let rec sortUtil acc rev lst =
+            match lst, rev with
+            | [], true -> acc |> List.rev
+            | [], false -> acc |> List.rev |> sortUtil [] true
+            | x :: y :: tl, _ when x > y -> sortUtil (y :: acc) false (x :: tl)
+            | hd :: tl, _ -> sortUtil (hd :: acc) rev tl
+
+        sortUtil [] true lst
+
 
     let rec quickSort =
         function
@@ -61,6 +72,22 @@ module ArraySorts =
             for j in 1 .. len - 1 do
                 if arr[j] < arr[j - 1] then
                     swap &arr[j] &arr[j - 1]
+
+        arr
+
+    let insertionSort (arr: 'a array) =
+        let arr = Array.copy arr
+        let n = arr.Length
+
+        for i in 1 .. n - 1 do
+            let key = arr[i]
+            let mutable j = i - 1
+
+            while j >= 0 && arr[j] > key do
+                arr[j + 1] <- arr[j]
+                j <- j - 1
+
+            arr[j + 1] <- key
 
         arr
 
