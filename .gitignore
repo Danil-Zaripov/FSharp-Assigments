@@ -401,5 +401,6 @@ FodyWeavers.xsd
 commit_script.bat
 commit_script.txt
 
+.ipynb_checkpoints/
 
-/src/PythonPlotting/.ipynb_checkpoints/
+*.ipynb
