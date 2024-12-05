@@ -1,7 +1,6 @@
 ﻿namespace Learning
 
 module ListSorts =
-
     let rec insertSorted =
         function
         | (x :: xs, v) when v > x -> x :: (insertSorted (xs, v))
@@ -11,7 +10,6 @@ module ListSorts =
         function
         | [] -> []
         | x :: xs -> insertSorted ((insertionSort xs), x)
-
 
     let bubbleSort lst =
         let rec sortUtil acc rev lst =
@@ -23,7 +21,6 @@ module ListSorts =
 
         sortUtil [] true lst
 
-
     let rec quickSort =
         function
         | [] -> []
@@ -31,7 +28,6 @@ module ListSorts =
             let smaller = List.filter ((>) x) xs
             let bigger = List.filter ((<=) x) xs
             (quickSort smaller) @ x :: (quickSort bigger)
-
 
 
     let rec mergeSort lst =
@@ -55,7 +51,7 @@ module ListSorts =
                 let chunks = lst |> List.splitInto 2
                 let p1, p2 = (chunks |> List.head, chunks |> List.tail |> List.exactlyOne)
                 p1, p2
-
+                
             merge (mergeSort l1) (mergeSort l2)
         | _ -> lst
 
@@ -74,6 +70,7 @@ module ArraySorts =
                     swap &arr[j] &arr[j - 1]
 
         arr
+
 
     let insertionSort (arr: 'a array) =
         let arr = Array.copy arr
@@ -116,7 +113,6 @@ module ArraySorts =
                 arr
 
         _quickSort arr 0 (arr.Length - 1)
-
 
     let divide_two_halves (left, right) =
         let length = right - left + 1 // end-inclusive
