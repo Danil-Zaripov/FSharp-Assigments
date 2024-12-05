@@ -12,4 +12,3 @@ module SortTests =
     [<Property>]
     let CheckArrayInsertionSort (arr: int array) =
         System.Linq.Enumerable.SequenceEqual(Array.sort arr, Learning.ArraySorts.insertionSort arr)
-

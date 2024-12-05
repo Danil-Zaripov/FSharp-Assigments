@@ -51,7 +51,7 @@ module ListSorts =
                 let chunks = lst |> List.splitInto 2
                 let p1, p2 = (chunks |> List.head, chunks |> List.tail |> List.exactlyOne)
                 p1, p2
-                
+
             merge (mergeSort l1) (mergeSort l2)
         | _ -> lst
 

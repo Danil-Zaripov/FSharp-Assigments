@@ -30,3 +30,13 @@ plt.xlabel('Element count')
 plt.ylabel('Running time, ms')
 plt.title('Built-in sorts are too fast')
 plt.savefig('Built-in sorts are too fast.png')
+
+# List to Array Ratio
+pvt['Quick Sort'] = pvt['List_Quick_Sort'].div(pvt['Array_Quick_Sort'])
+pvt['Merge Sort'] = pvt['List_Merge_Sort'].div(pvt['Array_Merge_Sort'])
+pvt['Built-in sort'] = pvt['List.sort'].div(pvt['Array.sort'])
+pvt.plot(y = ['Quick Sort', 'Merge Sort', 'Built-in sort'])
+plt.xlabel('Element count')
+plt.ylabel('List sort time / Array sort time')
+plt.title('List sort to array sort performance ratio')
+plt.savefig('List to array fast sorts ratio.png')
