@@ -9,7 +9,7 @@ type MyList<'a> =
         | Empty -> true
         | _ -> false
 
-let inline (=.=) hd tl = Cons(hd, tl)
+let (=.=) hd tl = Cons(hd, tl)
 
 module MyList =
 
@@ -26,7 +26,7 @@ module MyList =
     let fromFSList xs =
         xs |> (List.fold (fun st x -> x =.= st) Empty) |> rev
 
-    let bind alg xs = xs |> fromFSList |> alg |> toFSList
+    let bind f xs = xs |> fromFSList |> f |> toFSList
 
     let reduce folder =
         function
@@ -84,7 +84,7 @@ module MyList =
 
         rev (_append (rev list1) list2)
 
-let inline (@.@) xs ys = MyList.append xs ys
+let (@.@) xs ys = MyList.append xs ys
 
 module ListSorts =
     let bubbleSort lst =
