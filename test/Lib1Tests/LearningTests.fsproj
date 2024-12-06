@@ -31,5 +31,4 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Lib1\Learning.fsproj" />
   </ItemGroup>
-
 </Project>

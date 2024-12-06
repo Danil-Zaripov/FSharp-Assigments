@@ -4,5 +4,5 @@ open FsCheck
 open FsCheck.Xunit
 
 [<Properties(MaxTest = 100)>]
-module SortTests =
+module PropertyTests =
     let placeholder () = ()
