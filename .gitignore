@@ -397,4 +397,10 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 
+
 commit_script.bat
+commit_script.txt
+
+.ipynb_checkpoints/
+
+*.ipynb
