@@ -27,7 +27,7 @@ module MyTree =
     let rec foldBack folder tr st =
         match tr with
         | Node([]) -> emptyNode ()
-        | Node(xs) -> List.foldBack (fun acc x -> (fold folder acc x)) xs st
+        | Node(xs) -> List.foldBack (fun x acc -> (foldBack folder x acc)) xs st
         | Leaf x -> folder st x
 
     let height tr =
