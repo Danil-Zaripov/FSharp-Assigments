@@ -402,6 +402,7 @@ commit_script.bat
 commit_script.txt
 
 .ipynb_checkpoints/
+Tables/
 
 *.ipynb
 
