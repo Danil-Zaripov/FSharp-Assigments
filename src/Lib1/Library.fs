@@ -1,128 +1,128 @@
 ﻿module Learning
 
-type MyList<'a> =
-    | Cons of 'a * MyList<'a>
-    | Empty
-
-    member this.IsEmp =
-        match this with
-        | Empty -> true
-        | _ -> false
-
-let (=.=) hd tl = Cons(hd, tl)
-
-module MyList =
-
-    let rec fold folder st =
-        function
-        | Cons(hd, tl) -> fold folder (folder st hd) tl
-        | Empty -> st
-
-    let rev xs = fold (fun st x -> x =.= st) Empty xs
-
-    let toFSList xs =
-        xs |> (fold (fun st x -> x :: st) []) |> List.rev
-
-    let fromFSList xs =
-        xs |> (List.fold (fun st x -> x =.= st) Empty) |> rev
-
-    let bind f xs = xs |> fromFSList |> f |> toFSList
-
-    let reduce folder =
-        function
-        | Cons(hd, tl) -> fold folder hd tl
-        | Empty -> failwith "Applied reduce to an empty list"
-
-    let rec filter f =
-        function
-        | Cons(hd, tl) -> if f hd then Cons(hd, filter f tl) else filter f tl
-        | Empty -> Empty
-
-    let length xs = fold (fun st _ -> st + 1) 0 xs
-
-    let head =
-        function
-        | Cons(hd, _) -> hd
-        | Empty -> failwith "Empty list ain't got no head"
-
-    let tail =
-        function
-        | Cons(_, tl) -> tl
-        | Empty -> failwith "Empty list ain't got no tail"
-
-    let exactlyOne =
-        function
-        | Cons(hd, Empty) -> hd
-        | _ -> failwith "The list did not only contain 1 element"
-
-    let splitAt index list =
-        let rec _splitAt acc =
-            function
-            | _, Empty -> rev acc, Empty
-            | 0, rest -> rev acc, rest
-            | n, Cons(x, xs) -> _splitAt (x =.= acc) (n - 1, xs)
-
-        _splitAt Empty (index, list)
-
-    let splitInto n list =
-        let rec split acc n list =
-            match n, list with
-            | 0, _ -> rev acc
-            | _, Empty -> rev acc
-            | _, _ ->
-                let size = ((length list) + n - 1) / n
-                let part, rest = splitAt size list
-                split (part =.= acc) (n - 1) rest
-
-        split Empty n list
-
-    let append list1 list2 =
-        let rec _append acc =
-            function
-            | Empty -> acc
-            | Cons(x, xs) -> _append (x =.= acc) xs
-
-        rev (_append (rev list1) list2)
-
-let (@.@) xs ys = MyList.append xs ys
-
 module ListSorts =
+
     let bubbleSort lst =
         let rec _bubbleSort =
             function
-            | Cons(p1, Cons(p2, rest)) ->
+            | p1 :: p2 :: rest ->
                 if p1 > p2 then
-                    p2 =.= (_bubbleSort (p1 =.= rest))
+                    p2 :: (_bubbleSort (p1 :: rest))
                 else
-                    p1 =.= (_bubbleSort (p2 =.= rest))
+                    p1 :: (_bubbleSort (p2 :: rest))
             | rest -> rest
 
-        MyList.fold (fun acc _ -> _bubbleSort acc) lst lst
+        List.fold (fun acc _ -> _bubbleSort acc) lst lst
 
     let rec quickSort =
         function
-        | Empty -> Empty
-        | Cons(x, xs) ->
-            let smaller = MyList.filter ((>) x) xs
-            let bigger = MyList.filter ((<=) x) xs
-            (quickSort smaller) @.@ (x =.= (quickSort bigger))
+        | [] -> []
+        | x :: xs ->
+            let smaller = List.filter ((>) x) xs
+            let bigger = List.filter ((<=) x) xs
+            (quickSort smaller) @ x :: (quickSort bigger)
 
     let rec mergeSort lst =
         let rec _merge =
             function
-            | (Cons(x, xs), Cons(y, ys)) ->
+            | (x :: xs, y :: ys) ->
                 if x < y then
-                    x =.= (_merge (xs, y =.= ys))
+                    x :: (_merge (xs, y :: ys))
                 else
-                    y =.= (_merge (x =.= xs, ys))
-            | (xs, ys) -> if xs.IsEmp then ys else xs
+                    y :: (_merge (x :: xs, ys))
+            | (xs, ys) -> max xs ys // max([], lst) = lst // for any lst
 
         match lst with
-        | Cons(p1, Cons(p2, rest)) ->
+        | p1 :: p2 :: rest ->
             let l1, l2 =
-                let chunks = lst |> MyList.splitInto 2
-                let p1, p2 = (chunks |> MyList.head, chunks |> MyList.tail |> MyList.exactlyOne)
+                let chunks = lst |> List.splitInto 2
+                let p1, p2 = (chunks |> List.head, chunks |> List.tail |> List.exactlyOne)
                 p1, p2
 
             _merge (mergeSort l1, mergeSort l2)
         | _ -> lst
+
+
+module ArraySorts =
+    let swap (left: 'a byref) (right: 'a byref) =
+        let temp = left
+        left <- right
+        right <- temp
+
+    let bubbleSort (arr: 'a array) =
+        let len = arr |> Array.length
+
+        for i in 0 .. len - 1 do
+            for j in 1 .. len - 1 do
+                if arr[j] < arr[j - 1] then
+                    swap &arr[j] &arr[j - 1]
+
+        arr
+
+
+
+    let quickSort (arr: 'a array) =
+        let partition (arr: 'a array) low high =
+            let pivot = arr[high]
+
+            let mutable i = low - 1
+
+            for j in low .. high - 1 do
+                if arr[j] < pivot then
+                    i <- i + 1
+
+                    swap &arr[i] &arr[j]
+
+            swap &arr[i + 1] &arr[high]
+            arr, i + 1
+
+        let rec _quickSort (arr: 'a array) low high =
+            if low < high then
+                let (arr, piv) = partition arr low high
+                let arr = _quickSort arr low (piv - 1)
+                let arr = _quickSort arr (piv + 1) high
+                arr
+            else
+                arr
+
+        _quickSort arr 0 (arr.Length - 1)
+
+
+    let divide_two_halves (left, right) =
+        let length = right - left + 1 // end-inclusive
+        let half_length = length / 2
+
+        (left, left + half_length - 1), (left + half_length, right)
+
+    let mergeSort arr =
+        let arr = arr |> Array.copy
+
+        let _merge (arr1: 'a array) (arr2: 'a array) =
+            let final = Array.zeroCreate (arr1.Length + arr2.Length)
+            let mutable fp = 0
+            let mutable sp = 0
+
+            for i in 0 .. final.Length - 1 do
+                if fp >= arr1.Length then
+                    final[i] <- arr2[sp]
+                    sp <- sp + 1
+                elif sp >= arr2.Length then
+                    final[i] <- arr1[fp]
+                    fp <- fp + 1
+                elif arr1[fp] < arr2[sp] then
+                    final[i] <- arr1[fp]
+                    fp <- fp + 1
+                else
+                    final[i] <- arr2[sp]
+                    sp <- sp + 1
+
+            final
+
+        let rec _mergeSort (arr: 'a array) =
+            if arr.Length <= 1 then
+                arr
+            else
+                let (f1, f2), (s1, s2) = divide_two_halves (0, arr.Length - 1)
+                _merge (_mergeSort arr[f1..f2]) (_mergeSort arr[s1..s2])
+
+        _mergeSort arr
