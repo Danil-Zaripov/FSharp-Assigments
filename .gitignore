@@ -404,3 +404,7 @@ commit_script.txt
 .ipynb_checkpoints/
 
 *.ipynb
+
+*.png
+*.jpeg
+*.jpg
