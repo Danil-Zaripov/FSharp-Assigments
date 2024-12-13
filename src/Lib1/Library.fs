@@ -36,7 +36,7 @@ module MyTree =
     let height tr =
         let rec _h cur =
             function
-            | Node(xs) -> NonEmptyList.fold (fun st x -> max st (_h (cur + 1) x)) -1 xs
+            | Node(xs) -> xs |> NonEmptyList.map (_h (cur + 1)) |> NonEmptyList.max
             | Leaf _ -> cur
 
         _h 1 tr
