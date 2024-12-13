@@ -1,40 +1,42 @@
 ﻿module Trees
 
+open FSharpPlus.Data
+
+
 type MyTree<'a> =
-    | Node of MyTree<'a> list
+    | Node of MyTree<'a> NonEmptyList
     | Leaf of 'a
 
 module MyTree =
     let toLeaf x = Leaf x
 
-    let nodeFromList xs = Node(List.map toLeaf xs)
 
-    let emptyNode () =
-        failwith "The tree contained an empty node"
+    let ofList =
+        function
+        | x :: xs -> Node(NonEmptyList.create x xs)
+        | [] -> invalidArg "list" "List was empty"
 
     let rec map f =
         function
-        | Node([]) -> emptyNode ()
-        | Node(xs) -> Node(List.map (map f) xs)
+        | Node(xs) -> Node(NonEmptyList.map (map f) xs)
         | Leaf x -> Leaf(f x)
 
     let rec fold folder st =
         function
-        | Node([]) -> emptyNode ()
-        | Node(xs) -> List.fold (fun acc x -> (fold folder acc x)) st xs
+        | Node(xs) -> NonEmptyList.fold (fun acc x -> (fold folder acc x)) st xs
         | Leaf x -> folder st x
+
+    let sum tr = fold (+) 0 tr
 
     let rec foldBack folder tr st =
         match tr with
-        | Node([]) -> emptyNode ()
-        | Node(xs) -> List.foldBack (fun x acc -> (foldBack folder x acc)) xs st
+        | Node(xs) -> NonEmptyList.foldBack (fun x acc -> (foldBack folder x acc)) xs st
         | Leaf x -> folder st x
 
     let height tr =
         let rec _h cur =
             function
-            | Node([]) -> emptyNode ()
-            | Node(xs) -> List.fold (fun st x -> max st (_h (cur + 1) x)) -1 xs
+            | Node(xs) -> NonEmptyList.fold (fun st x -> max st (_h (cur + 1) x)) -1 xs
             | Leaf _ -> cur
 
         _h 1 tr
