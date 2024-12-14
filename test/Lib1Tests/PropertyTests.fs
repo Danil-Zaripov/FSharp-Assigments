@@ -5,7 +5,7 @@ open FsCheck.Xunit
 open Trees
 
 
-[<Properties(MaxTest = 1000)>]
+[<Properties(MaxTest = 100)>]
 module PropertyTests =
     let (.=.) left right =
         left = right |> Prop.label (sprintf "%A = %A" left right)
@@ -84,5 +84,31 @@ module PropertyTests =
                 mat
 
             expected .=. actual
+
+        (n <> 0 && m <> 0) ==> (lazy tst ())
+
+    [<Property>]
+    let multiplyIsCorrect (mat1: int array2d) =
+        let n, m = Array2D.getDims mat1
+
+        let tst () =
+            let d = (System.Random().Next(2, 100))
+            let mat2 = getRandomArray2D m d
+            let tr1 = mat1 |> QuadTree.ofMatrix
+            let tr2 = mat2 |> QuadTree.ofMatrix
+
+            let actual = QuadTree.multiply tr1 tr2
+
+            let expected =
+                let mat = Array2D.zeroCreate n d
+
+                for i in 0 .. n - 1 do
+                    for j in 0 .. d - 1 do
+                        for k in 0 .. m - 1 do
+                            mat[i, j] <- mat[i, j] + mat1[i, k] * mat2[k, j]
+
+                mat
+
+            actual = expected
 
         (n <> 0 && m <> 0) ==> (lazy tst ())

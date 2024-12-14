@@ -230,3 +230,22 @@ module QuadTree =
             _map2 f tr1 tr2
         else
             invalidArg "tr1 tr2" "QuadTrees represented matrices with different sizes"
+
+    let multiply tr1 tr2 =
+        let (n1, m1), (n2, m2) =
+            (getSegmentLength tr1.bounds.row, getSegmentLength tr1.bounds.col),
+            (getSegmentLength tr2.bounds.row, getSegmentLength tr2.bounds.col)
+
+        if m1 <> n2 then
+            invalidArg "tr1 tr2" "Matrices cannot be multiplied"
+        else
+            // The only way I know of
+            // Sadly
+            let mat = Array2D.zeroCreate n1 m2
+
+            for i in 0 .. n1 - 1 do
+                for j in 0 .. m2 - 1 do
+                    for k in 0 .. n2 - 1 do
+                        mat[i, j] <- mat[i, j] + (getElement (i, k) tr1) * (getElement (k, j) tr2)
+
+            mat
