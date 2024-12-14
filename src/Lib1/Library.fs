@@ -1,18 +1,30 @@
 module Trees
 
+type Bounds = { row: int * int; col: int * int } // boundary: starting .. ending
+
 type SubNodes<'a> =
-    { NW: _QuadTree<'a>
-      NE: _QuadTree<'a>
-      SW: _QuadTree<'a>
-      SE: _QuadTree<'a> }
+    { NW: Option<QuadTree<'a>> // NW is always Some
+      NE: Option<QuadTree<'a>>
+      SW: Option<QuadTree<'a>>
+      SE: Option<QuadTree<'a>> }
+
+    member this.asSeq =
+        seq {
+            this.NW
+            this.NE
+            this.SW
+            this.SE
+        }
 
 and _QuadTree<'a> =
     | Node of SubNodes<'a>
     | Leaf of 'a
 
-and Bounds = { n: int; m: int }
 
-type QuadTree<'a> = { bounds: Bounds; tree: _QuadTree<'a> }
+and QuadTree<'a> = { bounds: Bounds; tree: _QuadTree<'a> }
+
+
+
 
 module Array2D =
     let getDims mat =
@@ -42,14 +54,24 @@ module Array2D =
         st
 
 module QuadTree =
-    let divide_two_halves (left, right) =
-        let length = right - left + 1 // end-inclusive
-        let half_length = length / 2
+    let getSegmentLength (st, en) = en - st + 1
 
-        (left, left + half_length - 1), (left + half_length, right)
+    let inSegment x (st, en) = st <= x && x <= en
+
+    let addConst alpha (x, y) = (x + alpha, y + alpha)
+
+    let halve (left, right) =
+        let length = getSegmentLength (left, right) // end-inclusive
+
+        if length > 1 then
+            let half_length = length / 2
+
+            (left, left + half_length - 1), Some(left + half_length, right)
+        else
+            (left, right), None
 
     let ofMatrix mat =
-        let rec _f mat =
+        let rec _f mat xOff yOff =
             let n, m = Array2D.length1 mat, Array2D.length2 mat
             let first = mat[0, 0]
             let isWhole = mat |> Array2D.map ((=) first) |> Array2D.reduce (&&)
@@ -57,64 +79,90 @@ module QuadTree =
             if isWhole then
                 _QuadTree.Leaf first
             else
-                let (top, bot) = divide_two_halves (0, (n - 1))
-                let (left, right) = divide_two_halves (0, (m - 1))
-                let ((t1, t2), (b1, b2)) = (top, bot)
-                let ((l1, l2), (r1, r2)) = (left, right)
 
-                let subs =
-                    { NW = _f mat[t1..t2, l1..l2]
-                      NE = _f mat[t1..t2, r1..r2]
-                      SW = _f mat[b1..b2, l1..l2]
-                      SE = _f mat[b1..b2, r1..r2] }
+                let (top, bot) = halve (0, (n - 1))
+                let (left, right) = halve (0, (m - 1))
+
+                let getSub ns ms =
+                    let i1, i2 = ns
+                    let j1, j2 = ms
+
+                    Some(
+                        { bounds =
+                            { row = ns |> addConst xOff
+                              col = ms |> addConst yOff }
+                          tree = _f mat[i1..i2, j1..j2] (xOff + i1) (yOff + j1) }
+                    )
+
+                let NW = getSub top left
+
+                let NE =
+                    match right with
+                    | Some(right) -> getSub top right
+                    | None -> None
+
+                let SW =
+                    match bot with
+                    | Some(bot) -> getSub bot left
+                    | None -> None
+
+                let SE =
+                    match bot, right with
+                    | Some(bot), Some(right) -> getSub bot right
+                    | _ -> None
+
+                let subs = { NW = NW; NE = NE; SW = SW; SE = SE }
 
                 Node(subs)
 
         let n, m = Array2D.getDims mat
 
-        { bounds = { n = n; m = m }
-          tree = _f mat }
+        { bounds = { row = (0, n - 1); col = (0, m - 1) }
+          tree = _f mat 0 0 }
 
+    let tryOfMatrix mat =
+        let n, m = Array2D.length1 mat, Array2D.length2 mat
+        if n = 0 || m = 0 then None else Some(ofMatrix mat)
 
-    let rec map f =
-        function
-        | Node({ NW = NW; NE = NE; SW = SW; SE = SE }) ->
-            Node(
-                { NW = map f NW
-                  NE = map f NE
-                  SW = map f SW
-                  SE = map f SE }
-            )
-        | Leaf x -> Leaf(f x)
+    let toMatrix (root: 'a QuadTree) =
+        let n, m = root.bounds.row |> getSegmentLength, root.bounds.col |> getSegmentLength
 
-    let rec map2 f tr1 tr2 =
-        match tr1, tr2 with
-        | Node({ NW = NW1
-                 NE = NE1
-                 SW = SW1
-                 SE = SE1 }),
-          Node({ NW = NW2
-                 NE = NE2
-                 SW = SW2
-                 SE = SE2 }) ->
-            Node(
-                { NW = map2 f NW1 NW2
-                  NE = map2 f NE1 NE2
-                  SW = map2 f SW1 SW2
-                  SE = map2 f SE1 SE2 }
-            )
-        | Node({ NW = NW; NE = NE; SW = SW; SE = SE }), l ->
-            Node(
-                { NW = map2 f NW l
-                  NE = map2 f NE l
-                  SW = map2 f SW l
-                  SE = map2 f SE l }
-            )
-        | l, Node({ NW = NW; NE = NE; SW = SW; SE = SE }) ->
-            Node(
-                { NW = map2 f l NW
-                  NE = map2 f l NE
-                  SW = map2 f l SW
-                  SE = map2 f l SE }
-            )
-        | Leaf x, Leaf y -> Leaf(f x y)
+        let mat: 'a array2d = Array2D.zeroCreate n m
+
+        let rec _f tr =
+            match tr.tree with
+            | Leaf x ->
+                let nSt, nEn = tr.bounds.row
+                let mSt, mEn = tr.bounds.col
+
+                for i in nSt..nEn do
+                    for j in mSt..mEn do
+                        mat[i, j] <- x
+            | Node(subs) -> Seq.iter (Option.iter _f) subs.asSeq
+
+        _f root
+
+        mat
+
+    //let rec map f tr =
+    //    match tr.tree with
+    //    | Node({ NW = NW; NE = NE; SW = SW; SE = SE }) ->
+    //        Node(
+    //            { NW = { bounds = NW.bounds; tree = map f NW }
+    //              NE = { bounds = NE.bounds; tree = map f NE }
+    //              SW = { bounds = SW.bounds; tree = map f SW }
+    //              SE = { bounds = SE.bounds; tree = map f SE } }
+    //        )
+    //    | Leaf x -> Leaf(f x)
+
+    let getElement x y root = ()
+
+//let map2 f tr1 tr2 =
+//    let dims =
+//        let n1 = getSegmentLength tr1.bound.rows
+//        let n2 = getSegmentLength tr2.bound.rows
+
+//        let m1 = getSegmentLength tr1.bound.cols
+//        let m2 = getSegmentLength tr2.bound.cols
+
+//        max n1 n2, max m1 m2
