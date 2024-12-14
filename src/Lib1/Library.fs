@@ -25,7 +25,6 @@ and QuadTree<'a> = { bounds: Bounds; tree: _QuadTree<'a> }
 
 
 
-
 module Array2D =
     let getDims mat =
         Array2D.length1 mat, Array2D.length2 mat
@@ -59,6 +58,11 @@ module QuadTree =
     let inSegment x (st, en) = st <= x && x <= en
 
     let addConst alpha (x, y) = (x + alpha, y + alpha)
+
+    let subSegm (x1, x2) (y1, y2) =
+        if y1 <= x1 && x2 <= y2 then (x1, x2)
+        else if x1 <= y1 && y2 <= x2 then (y1, y2)
+        else failwith "Neither is a subsegment"
 
     let halve (left, right) =
         let length = getSegmentLength (left, right) // end-inclusive
@@ -144,25 +148,85 @@ module QuadTree =
 
         mat
 
-    //let rec map f tr =
-    //    match tr.tree with
-    //    | Node({ NW = NW; NE = NE; SW = SW; SE = SE }) ->
-    //        Node(
-    //            { NW = { bounds = NW.bounds; tree = map f NW }
-    //              NE = { bounds = NE.bounds; tree = map f NE }
-    //              SW = { bounds = SW.bounds; tree = map f SW }
-    //              SE = { bounds = SE.bounds; tree = map f SE } }
-    //        )
-    //    | Leaf x -> Leaf(f x)
+    let rec map f tr =
+        match tr.tree with
+        | Node({ NW = NW; NE = NE; SW = SW; SE = SE }) ->
+            { bounds = tr.bounds
+              tree =
+                Node(
+                    { NW = Option.map (map f) NW
+                      NE = Option.map (map f) NE
+                      SW = Option.map (map f) SW
+                      SE = Option.map (map f) SE }
+                ) }
+        | Leaf x -> { bounds = tr.bounds; tree = Leaf(f x) }
 
-    let getElement x y root = ()
+    let inQuadTree (i, j) tr =
+        let bounds = tr.bounds
+        (inSegment i bounds.row) && (inSegment j bounds.col)
 
-//let map2 f tr1 tr2 =
-//    let dims =
-//        let n1 = getSegmentLength tr1.bound.rows
-//        let n2 = getSegmentLength tr2.bound.rows
+    let getElement (x, y) root =
+        let rec _getElement x y tr =
+            if not (inQuadTree (x, y) tr) then
+                None
+            else
+                match tr.tree with
+                | Leaf x -> Some x
+                | Node(subs) -> subs.asSeq |> Seq.map (Option.bind (_getElement x y)) |> Seq.find Option.isSome
 
-//        let m1 = getSegmentLength tr1.bound.cols
-//        let m2 = getSegmentLength tr2.bound.cols
+        match _getElement x y root with
+        | None -> invalidArg "x,y" "Index out of range"
+        | Some x -> x
 
-//        max n1 n2, max m1 m2
+    let map2 f tr1 tr2 =
+        let lengthsAreEqual =
+            let n1, n2 = getSegmentLength tr1.bounds.row, getSegmentLength tr2.bounds.row
+            let m1, m2 = getSegmentLength tr1.bounds.col, getSegmentLength tr2.bounds.col
+            n1 = n2 && m1 = m2
+
+        if lengthsAreEqual then
+            let rec _map2 f tr1 tr2 =
+                match tr1.tree, tr2.tree with
+                | Leaf x, Leaf y ->
+                    { bounds =
+                        { row = subSegm tr1.bounds.row tr2.bounds.row
+                          col = subSegm tr1.bounds.col tr2.bounds.col }
+                      tree = Leaf(f x y) }
+                | Node({ NW = NW1
+                         NE = NE1
+                         SW = SW1
+                         SE = SE1 }),
+                  Node({ NW = NW2
+                         NE = NE2
+                         SW = SW2
+                         SE = SE2 }) ->
+                    { bounds = tr1.bounds
+                      tree =
+                        Node(
+                            { NW = Option.map2 (_map2 f) NW1 NW2
+                              NE = Option.map2 (_map2 f) NE1 NE2
+                              SW = Option.map2 (_map2 f) SW1 SW2
+                              SE = Option.map2 (_map2 f) SE1 SE2 }
+                        ) }
+                | Node({ NW = NW; NE = NE; SW = SW; SE = SE }), _ ->
+                    { bounds = tr1.bounds
+                      tree =
+                        Node(
+                            { NW = Option.map2 (_map2 f) NW (Some(tr2))
+                              NE = Option.map2 (_map2 f) NE (Some(tr2))
+                              SW = Option.map2 (_map2 f) SW (Some(tr2))
+                              SE = Option.map2 (_map2 f) SE (Some(tr2)) }
+                        ) }
+                | _, Node({ NW = NW; NE = NE; SW = SW; SE = SE }) ->
+                    { bounds = tr1.bounds
+                      tree =
+                        Node(
+                            { NW = Option.map2 (_map2 f) (Some(tr1)) NW
+                              NE = Option.map2 (_map2 f) (Some(tr1)) NE
+                              SW = Option.map2 (_map2 f) (Some(tr1)) SW
+                              SE = Option.map2 (_map2 f) (Some(tr1)) SE }
+                        ) }
+
+            _map2 f tr1 tr2
+        else
+            invalidArg "tr1 tr2" "QuadTrees represented matrices with different sizes"
