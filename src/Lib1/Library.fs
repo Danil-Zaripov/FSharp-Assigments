@@ -1,5 +1,11 @@
 module Trees
 
+// warning FS0049: Uppercase variable identifiers should
+// not generally be used in patterns, and may indicate a
+// missing open declaration or a misspelt pattern name.
+// From the QuadTree.map2 function
+#nowarn "0049"
+
 type Bounds = { row: int * int; col: int * int } // boundary: starting .. ending
 
 type SubNodes<'a> =
@@ -24,6 +30,34 @@ and _QuadTree<'a> =
 and QuadTree<'a> = { bounds: Bounds; tree: _QuadTree<'a> }
 
 
+
+module Utility =
+    let getSegmentLength (st, en) = en - st + 1
+
+    let inSegment x (st, en) = st <= x && x <= en
+
+    let addConst alpha (x, y) = (x + alpha, y + alpha)
+
+    let subSegm (x1, x2) (y1, y2) =
+        if y1 <= x1 && x2 <= y2 then (x1, x2)
+        else if x1 <= y1 && y2 <= x2 then (y1, y2)
+        else failwith "Neither is a subsegment"
+
+    let halve (left, right) =
+        let length = getSegmentLength (left, right) // end-inclusive
+
+        if length > 1 then
+            let half_length = length / 2
+
+            (left, left + half_length - 1), Some(left + half_length, right)
+        else
+            (left, right), None
+
+open Utility
+
+module Bounds =
+    let getDims bnds =
+        getSegmentLength bnds.row, getSegmentLength bnds.col
 
 module Array2D =
     let getDims mat =
@@ -52,31 +86,39 @@ module Array2D =
 
         st
 
+module SubNodes =
+    let map f { NW = NW; NE = NE; SW = SW; SE = SE } =
+        { NW = Option.map f NW
+          NE = Option.map f NE
+          SW = Option.map f SW
+          SE = Option.map f SE }
+
+    let map2
+        f
+        { NW = NW1
+          NE = NE1
+          SW = SW1
+          SE = SE1 }
+        { NW = NW2
+          NE = NE2
+          SW = SW2
+          SE = SE2 }
+        =
+        { NW = Option.map2 f NW1 NW2
+          NE = Option.map2 f NE1 NE2
+          SW = Option.map2 f SW1 SW2
+          SE = Option.map2 f SE1 SE2 }
+
+    let fill tr = { NW = tr; NE = tr; SW = tr; SE = tr }
+
 module QuadTree =
-    let getSegmentLength (st, en) = en - st + 1
+    let create bounds tree = { bounds = bounds; tree = tree }
 
-    let inSegment x (st, en) = st <= x && x <= en
-
-    let addConst alpha (x, y) = (x + alpha, y + alpha)
-
-    let subSegm (x1, x2) (y1, y2) =
-        if y1 <= x1 && x2 <= y2 then (x1, x2)
-        else if x1 <= y1 && y2 <= x2 then (y1, y2)
-        else failwith "Neither is a subsegment"
-
-    let halve (left, right) =
-        let length = getSegmentLength (left, right) // end-inclusive
-
-        if length > 1 then
-            let half_length = length / 2
-
-            (left, left + half_length - 1), Some(left + half_length, right)
-        else
-            (left, right), None
+    let createNode bounds subs = { bounds = bounds; tree = Node(subs) }
 
     let ofMatrix mat =
         let rec _f mat xOff yOff =
-            let n, m = Array2D.length1 mat, Array2D.length2 mat
+            let n, m = Array2D.getDims mat
             let first = mat[0, 0]
             let isWhole = mat |> Array2D.map ((=) first) |> Array2D.reduce (&&)
 
@@ -125,11 +167,11 @@ module QuadTree =
           tree = _f mat 0 0 }
 
     let tryOfMatrix mat =
-        let n, m = Array2D.length1 mat, Array2D.length2 mat
+        let n, m = Array2D.getDims mat
         if n = 0 || m = 0 then None else Some(ofMatrix mat)
 
     let toMatrix (root: 'a QuadTree) =
-        let n, m = root.bounds.row |> getSegmentLength, root.bounds.col |> getSegmentLength
+        let n, m = Bounds.getDims root.bounds
 
         let mat: 'a array2d = Array2D.zeroCreate n m
 
@@ -150,16 +192,8 @@ module QuadTree =
 
     let rec map f tr =
         match tr.tree with
-        | Node({ NW = NW; NE = NE; SW = SW; SE = SE }) ->
-            { bounds = tr.bounds
-              tree =
-                Node(
-                    { NW = Option.map (map f) NW
-                      NE = Option.map (map f) NE
-                      SW = Option.map (map f) SW
-                      SE = Option.map (map f) SE }
-                ) }
-        | Leaf x -> { bounds = tr.bounds; tree = Leaf(f x) }
+        | Node(subs) -> createNode tr.bounds (SubNodes.map (map f) subs)
+        | Leaf x -> create tr.bounds (Leaf(f x))
 
     let inQuadTree (i, j) tr =
         let bounds = tr.bounds
@@ -192,49 +226,17 @@ module QuadTree =
                         { row = subSegm tr1.bounds.row tr2.bounds.row
                           col = subSegm tr1.bounds.col tr2.bounds.col }
                       tree = Leaf(f x y) }
-                | Node({ NW = NW1
-                         NE = NE1
-                         SW = SW1
-                         SE = SE1 }),
-                  Node({ NW = NW2
-                         NE = NE2
-                         SW = SW2
-                         SE = SE2 }) ->
-                    { bounds = tr1.bounds
-                      tree =
-                        Node(
-                            { NW = Option.map2 (_map2 f) NW1 NW2
-                              NE = Option.map2 (_map2 f) NE1 NE2
-                              SW = Option.map2 (_map2 f) SW1 SW2
-                              SE = Option.map2 (_map2 f) SE1 SE2 }
-                        ) }
-                | Node({ NW = NW; NE = NE; SW = SW; SE = SE }), _ ->
-                    { bounds = tr1.bounds
-                      tree =
-                        Node(
-                            { NW = Option.map2 (_map2 f) NW (Some(tr2))
-                              NE = Option.map2 (_map2 f) NE (Some(tr2))
-                              SW = Option.map2 (_map2 f) SW (Some(tr2))
-                              SE = Option.map2 (_map2 f) SE (Some(tr2)) }
-                        ) }
-                | _, Node({ NW = NW; NE = NE; SW = SW; SE = SE }) ->
-                    { bounds = tr1.bounds
-                      tree =
-                        Node(
-                            { NW = Option.map2 (_map2 f) (Some(tr1)) NW
-                              NE = Option.map2 (_map2 f) (Some(tr1)) NE
-                              SW = Option.map2 (_map2 f) (Some(tr1)) SW
-                              SE = Option.map2 (_map2 f) (Some(tr1)) SE }
-                        ) }
+
+                | Node(subs1), Node(subs2) -> createNode tr1.bounds (SubNodes.map2 (_map2 f) subs1 subs2)
+                | Node(subs1), _ -> createNode tr1.bounds (SubNodes.map2 (_map2 f) subs1 (SubNodes.fill (Some(tr2))))
+                | _, Node(subs2) -> createNode tr1.bounds (SubNodes.map2 (_map2 f) (SubNodes.fill (Some(tr1))) subs2)
 
             _map2 f tr1 tr2
         else
             invalidArg "tr1 tr2" "QuadTrees represented matrices with different sizes"
 
     let multiply tr1 tr2 =
-        let (n1, m1), (n2, m2) =
-            (getSegmentLength tr1.bounds.row, getSegmentLength tr1.bounds.col),
-            (getSegmentLength tr2.bounds.row, getSegmentLength tr2.bounds.col)
+        let (n1, m1), (n2, m2) = Bounds.getDims tr1.bounds, Bounds.getDims tr2.bounds
 
         if m1 <> n2 then
             invalidArg "tr1 tr2" "Matrices cannot be multiplied"

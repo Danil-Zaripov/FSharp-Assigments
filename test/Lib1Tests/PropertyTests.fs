@@ -55,13 +55,9 @@ module PropertyTests =
 
     let getRandomArray2D n m =
         let rand = System.Random()
-        let mat = Array2D.zeroCreate n m
-
-        for i in 0 .. n - 1 do
-            for j in 0 .. m - 1 do
-                mat[i, j] <- rand.Next(-1000, 1000)
-
+        let mat = Array2D.map (fun _ -> rand.Next(-1000, 1000)) (Array2D.zeroCreate n m)
         mat
+
 
     [<Property>]
     let map2SumIsCorrect (mat1: int array2d) =
@@ -74,14 +70,7 @@ module PropertyTests =
 
             let actual = (QuadTree.map2 (+) tr1 tr2) |> QuadTree.toMatrix
 
-            let expected =
-                let mat = Array2D.copy mat1
-
-                for i in 0 .. n - 1 do
-                    for j in 0 .. m - 1 do
-                        mat[i, j] <- mat[i, j] + mat2[i, j]
-
-                mat
+            let expected = Array2D.copy mat1 |> Array2D.mapi (fun i j x -> x + mat2[i, j])
 
             expected .=. actual
 
