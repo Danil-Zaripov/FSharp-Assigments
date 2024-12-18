@@ -40,3 +40,5 @@ module MyTree =
             | Leaf _ -> cur
 
         _h 1 tr
+
+    let leafNumber tr = fold (fun st _ -> st + 1) 0 tr

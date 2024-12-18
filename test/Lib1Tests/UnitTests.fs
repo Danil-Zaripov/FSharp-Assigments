@@ -48,3 +48,10 @@ module UnitTests =
         let expected = treeHeight
         let actual = MyTree.height tree
         Assert.Equal(expected, actual)
+
+    [<Fact>]
+    let checkLeafNumberFunction () =
+        let expected = 8
+        let actual = MyTree.leafNumber tree
+
+        Assert.Equal(expected, actual)
