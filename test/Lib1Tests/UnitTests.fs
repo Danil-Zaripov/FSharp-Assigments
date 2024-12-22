@@ -76,3 +76,19 @@ module UnitTests =
             mat
 
         Assert.Equal(expected, actual)
+
+    [<Fact>]
+    let checkProduct () =
+        let mat1 = Array2D.create 1 1 1
+        let mat2 = Array2D.create 1 6 6
+
+        mat2[0, 3] <- 122
+
+        let expected = mat2
+
+
+        let tr1 = mat1 |> QuadTree.ofMatrix
+        let tr2 = mat2 |> QuadTree.ofMatrix
+        let actual = QuadTree.multiply tr1 tr2 |> QuadTree.toMatrix
+
+        Assert.Equal(expected, actual)

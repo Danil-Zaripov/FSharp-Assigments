@@ -98,6 +98,6 @@ module PropertyTests =
 
                 mat
 
-            actual = expected
+            actual |> QuadTree.toMatrix .=. expected
 
         (n <> 0 && m <> 0) ==> (lazy tst ())

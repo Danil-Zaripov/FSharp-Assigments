@@ -34,13 +34,22 @@ and QuadTree<'a> = { bounds: Bounds; tree: _QuadTree<'a> }
 module Utility =
     let getSegmentLength (st, en) = en - st + 1
 
-    let inSegment x (st, en) = st <= x && x <= en
+    let isInSegment x (st, en) = st <= x && x <= en
+
+    // First is a subsegment of the second
+    let isSubSegm (x, y) (a, b) = a <= x && y <= b
+
+    let oneIsSubSegm segm1 segm2 =
+        isSubSegm segm1 segm2 || isSubSegm segm2 segm1
+
+    let isHardSubSegm (x, y) (a, b) =
+        isSubSegm (x, y) (a, b) && (x <> a || y <> b)
 
     let addConst alpha (x, y) = (x + alpha, y + alpha)
 
-    let subSegm (x1, x2) (y1, y2) =
-        if y1 <= x1 && x2 <= y2 then (x1, x2)
-        else if x1 <= y1 && y2 <= x2 then (y1, y2)
+    let subSegm fst snd =
+        if isSubSegm fst snd then fst
+        else if isSubSegm snd fst then snd
         else failwith "Neither is a subsegment"
 
     let halve (left, right) =
@@ -115,6 +124,37 @@ module QuadTree =
     let create bounds tree = { bounds = bounds; tree = tree }
 
     let createNode bounds subs = { bounds = bounds; tree = Node(subs) }
+
+    let divideLeaf tr =
+        match tr.tree with
+        | Leaf _ ->
+            let (n, m) = Bounds.getDims tr.bounds
+
+            if n > 1 || m > 1 then
+                let top, bot = halve tr.bounds.row
+                let left, right = halve tr.bounds.col
+                let top, left = Some(top), Some(left)
+
+                let create row col =
+                    match row, col with
+                    | Some(row), Some(col) ->
+                        Some(
+                            { tr with
+                                bounds = { row = row; col = col } }
+                        )
+                    | _ -> None
+
+                let subs =
+                    { NW = create top left
+                      NE = create top right
+                      SW = create bot left
+                      SE = create bot right }
+
+                { tr with tree = Node(subs) }
+            else
+                tr
+        | _ -> failwith "Can't divide a Node"
+
 
     let ofMatrix mat =
         let rec _f mat xOff yOff =
@@ -197,7 +237,7 @@ module QuadTree =
 
     let inQuadTree (i, j) tr =
         let bounds = tr.bounds
-        (inSegment i bounds.row) && (inSegment j bounds.col)
+        (isInSegment i bounds.row) && (isInSegment j bounds.col)
 
     let getElement (x, y) root =
         let rec _getElement x y tr =
@@ -235,19 +275,90 @@ module QuadTree =
         else
             invalidArg "tr1 tr2" "QuadTrees represented matrices with different sizes"
 
-    let multiply tr1 tr2 =
+    let multiply (tr1: 'a QuadTree) (tr2: 'a QuadTree) =
         let (n1, m1), (n2, m2) = Bounds.getDims tr1.bounds, Bounds.getDims tr2.bounds
 
         if m1 <> n2 then
             invalidArg "tr1 tr2" "Matrices cannot be multiplied"
         else
-            // The only way I know of
-            // Sadly
-            let mat = Array2D.zeroCreate n1 m2
+            let n, k, m = n1, m1, m2
 
-            for i in 0 .. n1 - 1 do
-                for j in 0 .. m2 - 1 do
-                    for k in 0 .. n2 - 1 do
-                        mat[i, j] <- mat[i, j] + (getElement (i, k) tr1) * (getElement (k, j) tr2)
+            let ret =
+                { bounds = { row = (0, n - 1); col = (0, m - 1) }
+                  tree = Leaf Unchecked.defaultof<'a> }
 
-            mat
+            let rec existsSmaller byRow segm tr =
+                let toCheck = if byRow then tr.bounds.row else tr.bounds.col
+
+                if not (isSubSegm toCheck segm || isSubSegm segm toCheck) then
+                    false
+                else
+                    match tr.tree with
+                    | Leaf _ -> Utility.isHardSubSegm toCheck segm
+                    | Node subs ->
+                        subs.asSeq
+                        |> Seq.map (Option.map (existsSmaller byRow segm))
+                        |> Seq.filter (Option.isSome)
+                        |> Seq.map (Option.get)
+                        |> Seq.reduce (||)
+
+            let rec _f mine =
+                if
+                    existsSmaller true mine.bounds.row tr1
+                    || existsSmaller false mine.bounds.col tr2
+                then
+                    let mine = divideLeaf mine
+
+                    match mine.tree with
+                    | Node(subs) ->
+                        let subs = SubNodes.map (_f) subs
+
+                        { bounds = mine.bounds
+                          tree = Node(subs) }
+                    | _ -> failwith "Pattern impossible to reach"
+                else
+                    let rec mul bnd c r =
+                        if isSubSegm bnd.row c.bounds.row && isSubSegm bnd.col r.bounds.col then
+                            match c.tree, r.tree with
+                            | Leaf x, Leaf y when oneIsSubSegm c.bounds.col r.bounds.row ->
+                                let ml = min (getSegmentLength c.bounds.col) (getSegmentLength r.bounds.row)
+                                Some(x * y * ml)
+                            | Leaf _, Node(subs) ->
+                                Some(
+                                    subs.asSeq
+                                    |> Seq.toList
+                                    |> Seq.filter Option.isSome
+                                    |> Seq.map Option.get
+                                    |> Seq.map (mul bnd c)
+                                    |> Seq.filter Option.isSome
+                                    |> Seq.map Option.get
+                                    |> Seq.sum
+                                )
+                            | Node(subs), _ ->
+                                let _map =
+                                    function
+                                    | Some(tr) -> mul bnd tr r
+                                    | None -> None
+
+                                Some(
+                                    subs.asSeq
+                                    |> Seq.toList
+                                    |> List.map _map
+                                    |> List.filter Option.isSome
+                                    |> List.map Option.get
+                                    |> List.sum
+                                )
+                            | _ -> None
+
+                        else
+                            None
+
+                    let value =
+                        match mul mine.bounds tr1 tr2 with
+                        | Some x -> x
+                        | None -> failwith "Multiplying went a wrong way"
+
+                    { bounds = mine.bounds
+                      tree = Leaf value }
+
+            _f ret
