@@ -1,6 +1,5 @@
 module Trees
 
-open Microsoft.FSharp.Math
 // warning FS0049: Uppercase variable identifiers should
 // not generally be used in patterns, and may indicate a
 // missing open declaration or a misspelt pattern name.
@@ -276,45 +275,7 @@ module QuadTree =
         else
             invalidArg "tr1 tr2" "QuadTrees represented matrices with different sizes"
 
-
-
     let multiply opMult opAdd genericZero (tr1: 'a QuadTree) (tr2: 'a QuadTree) =
-        let rec mul bnd c r =
-            if isSubSegm bnd.row c.bounds.row && isSubSegm bnd.col r.bounds.col then
-                match c.tree, r.tree with
-                | Leaf x, Leaf y when oneIsSubSegm c.bounds.col r.bounds.row ->
-                    let ml = min (getSegmentLength c.bounds.col) (getSegmentLength r.bounds.row)
-                    let value = seq { for _ in 1..ml -> opMult x y } |> Seq.reduce opAdd
-                    Some(value)
-                | Leaf x, Node(subs) ->
-                    Some(
-                        subs.asSeq
-                        |> Seq.toList
-                        |> Seq.filter Option.isSome
-                        |> Seq.map Option.get
-                        |> Seq.map (mul bnd c)
-                        |> Seq.filter Option.isSome
-                        |> Seq.map Option.get
-                        |> Seq.fold opAdd genericZero
-                    )
-                | Node(subs), _ ->
-                    let _map (tr: 'a QuadTree option) =
-                        match tr with
-                        | Some(tr) -> mul bnd tr r
-                        | None -> None
-
-                    Some(
-                        subs.asSeq
-                        |> Seq.map _map
-                        |> Seq.filter Option.isSome
-                        |> Seq.map Option.get
-                        |> Seq.fold opAdd genericZero
-                    )
-                | _ -> None
-
-            else
-                None
-
         let (n1, m1), (n2, m2) = Bounds.getDims tr1.bounds, Bounds.getDims tr2.bounds
 
         if m1 <> n2 then
@@ -341,7 +302,41 @@ module QuadTree =
                         |> Seq.map (Option.get)
                         |> Seq.reduce (||)
 
-            let rec _f mine =
+            let rec getMultipliedValue bnd c r =
+                if isSubSegm bnd.row c.bounds.row && isSubSegm bnd.col r.bounds.col then
+                    match c.tree, r.tree with
+                    | Leaf x, Leaf y when oneIsSubSegm c.bounds.col r.bounds.row ->
+                        let ml = min (getSegmentLength c.bounds.col) (getSegmentLength r.bounds.row)
+                        let multiplied = opMult x y
+                        let value = seq { for _ in 1..ml -> multiplied } |> Seq.reduce opAdd
+                        Some(value)
+                    | Leaf x, Node(subs) ->
+                        Some(
+                            subs.asSeq
+                            |> Seq.map (Option.bind (getMultipliedValue bnd c))
+                            |> Seq.filter Option.isSome
+                            |> Seq.map Option.get
+                            |> Seq.fold opAdd genericZero
+                        )
+                    | Node(subs), _ ->
+                        let _map (tr: 'a QuadTree option) =
+                            match tr with
+                            | Some(tr) -> getMultipliedValue bnd tr r
+                            | None -> None
+
+                        Some(
+                            subs.asSeq
+                            |> Seq.map _map
+                            |> Seq.filter Option.isSome
+                            |> Seq.map Option.get
+                            |> Seq.fold opAdd genericZero
+                        )
+                    | _ -> None
+
+                else
+                    None
+
+            let rec divideUntilSmallEnough mine =
                 if
                     existsSmaller true mine.bounds.row tr1
                     || existsSmaller false mine.bounds.col tr2
@@ -350,18 +345,18 @@ module QuadTree =
 
                     match mine.tree with
                     | Node(subs) ->
-                        let subs = SubNodes.map (_f) subs
+                        let subs = SubNodes.map (divideUntilSmallEnough) subs
 
                         { bounds = mine.bounds
                           tree = Node(subs) }
                     | _ -> failwith "Pattern impossible to reach"
                 else
                     let value =
-                        match mul mine.bounds tr1 tr2 with
+                        match getMultipliedValue mine.bounds tr1 tr2 with
                         | Some x -> x
                         | None -> failwith "Multiplying went a wrong way"
 
                     { bounds = mine.bounds
                       tree = Leaf value }
 
-            _f ret
+            divideUntilSmallEnough ret
