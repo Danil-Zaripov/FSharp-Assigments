@@ -119,8 +119,6 @@ module SubNodes =
           SW = Option.map2 f SW1 SW2
           SE = Option.map2 f SE1 SE2 }
 
-    let fill tr = { NW = tr; NE = tr; SW = tr; SE = tr }
-
 module QuadTree =
     let create bounds tree = { bounds = bounds; tree = tree }
 
@@ -261,6 +259,8 @@ module QuadTree =
 
         if lengthsAreEqual then
             let rec _map2 f tr1 tr2 =
+                let fill tr = { NW = tr; NE = tr; SW = tr; SE = tr }
+
                 match tr1.tree, tr2.tree with
                 | Leaf x, Leaf y ->
                     { bounds =
@@ -269,8 +269,8 @@ module QuadTree =
                       tree = Leaf(f x y) }
 
                 | Node(subs1), Node(subs2) -> createNode tr1.bounds (SubNodes.map2 (_map2 f) subs1 subs2)
-                | Node(subs1), _ -> createNode tr1.bounds (SubNodes.map2 (_map2 f) subs1 (SubNodes.fill (Some(tr2))))
-                | _, Node(subs2) -> createNode tr1.bounds (SubNodes.map2 (_map2 f) (SubNodes.fill (Some(tr1))) subs2)
+                | Node(subs1), _ -> createNode tr1.bounds (SubNodes.map2 (_map2 f) subs1 (fill (Some(tr2))))
+                | _, Node(subs2) -> createNode tr1.bounds (SubNodes.map2 (_map2 f) (fill (Some(tr1))) subs2)
 
             _map2 f tr1 tr2
         else

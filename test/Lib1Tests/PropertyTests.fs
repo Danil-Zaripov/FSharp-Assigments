@@ -81,7 +81,7 @@ module PropertyTests =
         let n, m = Array2D.getDims mat1
 
         let tst () =
-            let d = (System.Random().Next(2, 100))
+            let d = (System.Random().Next(1, 500))
             let mat2 = getRandomArray2D m d
             let tr1 = mat1 |> QuadTree.ofMatrix
             let tr2 = mat2 |> QuadTree.ofMatrix
@@ -107,7 +107,7 @@ module PropertyTests =
         let n, m = Array2D.getDims mat1
 
         let tst () =
-            let d = (System.Random().Next(2, 100))
+            let d = (System.Random().Next(1, 500))
             let mat2 = getRandomArray2D m d |> Array2D.map bigint
             let tr1 = mat1 |> QuadTree.ofMatrix
             let tr2 = mat2 |> QuadTree.ofMatrix
