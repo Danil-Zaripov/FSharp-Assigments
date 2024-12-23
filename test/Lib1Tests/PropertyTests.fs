@@ -86,7 +86,33 @@ module PropertyTests =
             let tr1 = mat1 |> QuadTree.ofMatrix
             let tr2 = mat2 |> QuadTree.ofMatrix
 
-            let actual = QuadTree.multiply tr1 tr2
+            let actual = QuadTree.multiply (*) (+) 0 tr1 tr2
+
+            let expected =
+                let mat = Array2D.zeroCreate n d
+
+                for i in 0 .. n - 1 do
+                    for j in 0 .. d - 1 do
+                        for k in 0 .. m - 1 do
+                            mat[i, j] <- mat[i, j] + mat1[i, k] * mat2[k, j]
+
+                mat
+
+            actual |> QuadTree.toMatrix .=. expected
+
+        (n <> 0 && m <> 0) ==> (lazy tst ())
+
+    [<Property>]
+    let multiplyBigintIsCorrect (mat1: bigint array2d) =
+        let n, m = Array2D.getDims mat1
+
+        let tst () =
+            let d = (System.Random().Next(2, 100))
+            let mat2 = getRandomArray2D m d |> Array2D.map bigint
+            let tr1 = mat1 |> QuadTree.ofMatrix
+            let tr2 = mat2 |> QuadTree.ofMatrix
+
+            let actual = QuadTree.multiply (*) (+) (0 |> bigint) tr1 tr2
 
             let expected =
                 let mat = Array2D.zeroCreate n d
