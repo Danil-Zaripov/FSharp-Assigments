@@ -30,5 +30,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Lib1\Learning.fsproj" />
+    <ProjectReference Include="..\..\src\ImageProcessing\ImageProcessing.fsproj" />
   </ItemGroup>
 </Project>
