@@ -5,9 +5,10 @@ filepath = 'Tables/Program.BigDataArrayAndListSortComparisonBenchmark.csv'
 
 df_raw = pd.read_csv(filepath, sep = ';', thousands = ',')
 
-df = df_raw[['Method', 'Element_Count', 'Mean [ms]', 'Ratio']]
+df = df_raw[['Method', 'Element_Count', 'Mean [ms]', 'Ratio']].rename(columns = {'Method' : 'Функция'})
 
 russify = {
+    'Method' : 'Функция',
     'Array_Merge_Sort' : 'Сорторовка слиянием на массиве',
     'Array_Quick_Sort' : 'Быстрая сортировка на массиве',
     'Array_Bubble_Sort' : 'Сортировка пузырьком на массиве',
@@ -32,7 +33,7 @@ russify = {
 }
 
 # Running time
-pvt = df[df['Method'].str.find('sort') == -1].pivot_table(values = 'Mean [ms]', index = 'Element_Count', columns = 'Method')
+pvt = df[df['Функция'].str.find('sort') == -1].pivot_table(values = 'Mean [ms]', index = 'Element_Count', columns = 'Функция')
 pvt.rename(columns = russify, inplace=True)
 pvt.plot()
 plt.xlabel('Кол-во элементов')
@@ -41,7 +42,7 @@ plt.title('Производительность сортировок на спи
 plt.savefig('Array and list fast sorts comparison.png')
 
 # List to Array Ratio
-pvt = df.pivot_table(values = 'Mean [ms]', index = 'Element_Count', columns = 'Method')
+pvt = df.pivot_table(values = 'Mean [ms]', index = 'Element_Count', columns = 'Функция')
 pvt['Quick Sort'] = pvt['List_Quick_Sort'].div(pvt['Array_Quick_Sort'])
 pvt['Merge Sort'] = pvt['List_Merge_Sort'].div(pvt['Array_Merge_Sort'])
 pvt['Built-in sort'] = pvt['List.sort'].div(pvt['Array.sort'])
@@ -53,7 +54,7 @@ plt.title('Сравнение производительности сортир�
 plt.savefig('List to array fast sorts ratio.png')
 
 # Ratio
-pvt = df.pivot_table(values = 'Mean [ms]', index = 'Element_Count', columns = 'Method')
+pvt = df.pivot_table(values = 'Mean [ms]', index = 'Element_Count', columns = 'Функция')
 pvt['List Merge Sort'] = pvt['List_Merge_Sort'].div(pvt['Array_Quick_Sort'])
 pvt['List Quick Sort'] = pvt['List_Quick_Sort'].div(pvt['Array_Quick_Sort'])
 pvt['Array Merge Sort'] = pvt['Array_Merge_Sort'].div(pvt['Array_Quick_Sort'])
