@@ -10,10 +10,36 @@ module PropertyTests =
 
     [<Property>]
     let checkIdentityFilter (data: byte[,]) =
-        let tst () =
-            let expected = Array2D.copy data
-            let actual = applyFilter idKernel data
+        let expected = Array2D.copy data
+        let actual = applyFilter idKernel data
 
-            expected = actual
+        expected = actual
 
-        tst ()
+    [<Property>]
+    let checkBlackFilter (data: byte[,]) =
+        let expected = Array2D.zeroCreate (Array2D.length1 data) (Array2D.length2 data)
+        let actual = applyFilter blackKernel data
+
+        expected = actual
+
+    [<Property>]
+    let checkWhiteFilter (data: byte[,]) =
+        let expected = data |> Array2D.map (fun x -> if x > 0uy then 255uy else 0uy)
+        let actual = applyFilter whiteKernel data
+
+        expected = actual
+
+    [<Property>]
+    let sizeDoesntChange (data: byte[,]) (f: float32 -> float32) =
+        let filter =
+            let rand = System.Random()
+            let randomize _ = rand.Next(-100, 100)
+            gaussianBlurKernel |> Array.map (Array.map (randomize >> float32 >> f))
+
+        let expected = Array2D.length1 data, Array2D.length2 data
+
+        let actual =
+            let filtered = data |> applyFilter filter
+            Array2D.length1 filtered, Array2D.length2 filtered
+
+        expected = actual

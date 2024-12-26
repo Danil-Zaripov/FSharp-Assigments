@@ -97,6 +97,10 @@ let outlineKernel =
     [| [| -1; -1; -1 |]; [| -1; 8; -1 |]; [| -1; -1; -1 |] |]
     |> Array.map (Array.map float32)
 
+let blackKernel = [| [| 0 |] |] |> Array.map (Array.map float32)
+
+let whiteKernel = [| [| 255 |] |] |> Array.map (Array.map float32)
+
 let applyFilter (filter: float32[][]) (img: byte[,]) =
     let imgH = img.GetLength 0
     let imgW = img.GetLength 1
