@@ -9,7 +9,7 @@ module Trees
 type Bounds = { row: int * int; col: int * int } // boundary: starting .. ending
 
 type SubNodes<'a> =
-    { NW: Option<QuadTree<'a>> // NW is always Some
+    { NW: Option<QuadTree<'a>>
       NE: Option<QuadTree<'a>>
       SW: Option<QuadTree<'a>>
       SE: Option<QuadTree<'a>> }
