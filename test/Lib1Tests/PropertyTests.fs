@@ -4,6 +4,18 @@ open FsCheck
 open FsCheck.Xunit
 open Trees
 
+module Utility =
+    let multiply opMult opAdd genericZero mat1 mat2 =
+        let n, k = Array2D.getDims mat1
+        let k, m = Array2D.getDims mat2
+        let mat = Array2D.create n m genericZero
+
+        for i in 0 .. n - 1 do
+            for j in 0 .. m - 1 do
+                for k in 0 .. k - 1 do
+                    mat[i, j] <- opAdd mat[i, j] (opMult mat1[i, k] mat2[k, j])
+
+        mat
 
 [<Properties(MaxTest = 100)>]
 module PropertyTests =
@@ -88,15 +100,7 @@ module PropertyTests =
 
             let actual = QuadTree.multiply (*) (+) 0 tr1 tr2
 
-            let expected =
-                let mat = Array2D.zeroCreate n d
-
-                for i in 0 .. n - 1 do
-                    for j in 0 .. d - 1 do
-                        for k in 0 .. m - 1 do
-                            mat[i, j] <- mat[i, j] + mat1[i, k] * mat2[k, j]
-
-                mat
+            let expected = Utility.multiply (*) (+) 0 mat1 mat2
 
             actual |> QuadTree.toMatrix .=. expected
 
@@ -114,15 +118,7 @@ module PropertyTests =
 
             let actual = QuadTree.multiply (*) (+) (0 |> bigint) tr1 tr2
 
-            let expected =
-                let mat = Array2D.zeroCreate n d
-
-                for i in 0 .. n - 1 do
-                    for j in 0 .. d - 1 do
-                        for k in 0 .. m - 1 do
-                            mat[i, j] <- mat[i, j] + mat1[i, k] * mat2[k, j]
-
-                mat
+            let expected = Utility.multiply (*) (+) (0 |> bigint) mat1 mat2
 
             actual |> QuadTree.toMatrix .=. expected
 
@@ -203,17 +199,7 @@ module SparseMatrixTests =
         let tr2 = mat2 |> QuadTree.ofMatrix
         let actual = (QuadTree.multiply (*) (+) 0 tr1 tr2) |> QuadTree.toMatrix
 
-        let expected =
-            let n, k = Array2D.getDims mat1
-            let k, m = Array2D.getDims mat2
-            let mat = Array2D.zeroCreate n m
-
-            for i in 0 .. n - 1 do
-                for j in 0 .. m - 1 do
-                    for k in 0 .. k - 1 do
-                        mat[i, j] <- mat[i, j] + mat1[i, k] * mat2[k, j]
-
-            mat
+        let expected = Utility.multiply (*) (+) 0 mat1 mat2
 
         expected = actual
 
@@ -223,16 +209,6 @@ module SparseMatrixTests =
         let tr2 = mat2 |> QuadTree.ofMatrix
         let actual = (QuadTree.multiply (&&) (||) false tr1 tr2) |> QuadTree.toMatrix
 
-        let expected =
-            let n, k = Array2D.getDims mat1
-            let k, m = Array2D.getDims mat2
-            let mat = Array2D.zeroCreate n m
-
-            for i in 0 .. n - 1 do
-                for j in 0 .. m - 1 do
-                    for k in 0 .. k - 1 do
-                        mat[i, j] <- mat[i, j] || (mat1[i, k] && mat2[k, j])
-
-            mat
+        let expected = Utility.multiply (&&) (||) false mat1 mat2
 
         expected = actual
