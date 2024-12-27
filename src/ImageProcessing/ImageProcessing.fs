@@ -118,13 +118,13 @@ let blackKernel = [| [| 0 |] |] |> Array.map (Array.map float32)
 
 let whiteKernel = [| [| 255 |] |] |> Array.map (Array.map float32)
 
-let expand kernel =
+let expand times kernel =
     let n, m = Array.length kernel, Array.length kernel[0]
-    let expanded = Array2D.zeroCreate (n + 2) (m + 2)
+    let expanded = Array2D.zeroCreate (n + 2 * times) (m + 2 * times)
 
-    for i in 1..n do
-        for j in 1..m do
-            expanded[i, j] <- kernel[i - 1][j - 1]
+    for i in times .. n - 1 + times do
+        for j in times .. m - 1 + times do
+            expanded[i, j] <- kernel[i - times][j - times]
 
     Array2D.toJagged expanded
 

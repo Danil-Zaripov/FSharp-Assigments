@@ -65,7 +65,7 @@ module PropertyTests =
             let randomize _ = rand.Next(-100, 100)
             gaussianBlurKernel |> Array.map (Array.map (randomize >> float32 >> f))
 
-        let expanded = expand filter
+        let expanded = expand 3 filter
         let expected = data |> applyFilter filter
         let actual = data |> applyFilter expanded
 
