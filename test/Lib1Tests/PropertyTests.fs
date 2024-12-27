@@ -52,7 +52,7 @@ module PropertyTests =
         (expected[1 .. n - 2, 1 .. m - 2] = actual[1 .. n - 2, 1 .. m - 2])
 
     [<Property>]
-    let shiftingIsKommutative (data: byte[,]) =
+    let shiftingIsCommutative (data: byte[,]) =
         let downRight = data |> applyFilter shiftDownKernel |> applyFilter shiftRightKernel
         let rightDown = data |> applyFilter shiftRightKernel |> applyFilter shiftDownKernel
 
