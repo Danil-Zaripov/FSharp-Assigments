@@ -4,6 +4,11 @@ open System
 open SixLabors.ImageSharp
 open SixLabors.ImageSharp.PixelFormats
 
+module Array2D =
+    let toJagged<'a> (arr: 'a[,]) : 'a[][] =
+        [| for x in 0 .. Array2D.length1 arr - 1 do
+               yield [| for y in 0 .. Array2D.length2 arr - 1 -> arr.[x, y] |] |]
+
 [<Struct>]
 type Image =
     val Data: array<byte>
@@ -97,9 +102,31 @@ let outlineKernel =
     [| [| -1; -1; -1 |]; [| -1; 8; -1 |]; [| -1; -1; -1 |] |]
     |> Array.map (Array.map float32)
 
+let shiftRightKernel =
+    [| [| 0; 0; 0 |]; [| 1; 0; 0 |]; [| 0; 0; 0 |] |]
+    |> Array.map (Array.map float32)
+
+let shiftDownKernel =
+    [| [| 0; 1; 0 |]; [| 0; 0; 0 |]; [| 0; 0; 0 |] |]
+    |> Array.map (Array.map float32)
+
+let shiftRightDownKenrel =
+    [| [| 1; 0; 0 |]; [| 0; 0; 0 |]; [| 0; 0; 0 |] |]
+    |> Array.map (Array.map float32)
+
 let blackKernel = [| [| 0 |] |] |> Array.map (Array.map float32)
 
 let whiteKernel = [| [| 255 |] |] |> Array.map (Array.map float32)
+
+let expand kernel =
+    let n, m = Array.length kernel, Array.length kernel[0]
+    let expanded = Array2D.zeroCreate (n + 2) (m + 2)
+
+    for i in 1..n do
+        for j in 1..m do
+            expanded[i, j] <- kernel[i - 1][j - 1]
+
+    Array2D.toJagged expanded
 
 let applyFilter (filter: float32[][]) (img: byte[,]) =
     let imgH = img.GetLength 0

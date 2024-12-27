@@ -10,7 +10,9 @@ type FilterType =
     | TopSobel
     | Outline
     | Sharpen
-
+    | ShiftRight
+    | ShiftDown
+    | ShiftRightDown
 
 type CmdArgs =
     | [<Mandatory>] Input_File of string
@@ -40,6 +42,11 @@ let main argv =
 
     let inImage = loadAs2DArray inFile
 
+    let inImage =
+        let arr = Array2D.zeroCreate 4 4
+        arr[3, 0] <- 1uy
+        arr
+
     let resultImage =
         let folder st =
             function
@@ -51,8 +58,12 @@ let main argv =
             | TopSobel -> applyFilter topSobelKernel st
             | Outline -> applyFilter outlineKernel st
             | Sharpen -> applyFilter sharpenKernel st
+            | ShiftRight -> applyFilter shiftRightKernel st
+            | ShiftDown -> applyFilter shiftDownKernel st
+            | ShiftRightDown -> applyFilter shiftRightDownKenrel st
 
         filters |> List.fold folder inImage
 
-    save2DByteArrayAsImage resultImage outFile
+    printfn "%A" resultImage
+    //save2DByteArrayAsImage resultImage outFile
     0
