@@ -42,11 +42,6 @@ let main argv =
 
     let inImage = loadAs2DArray inFile
 
-    let inImage =
-        let arr = Array2D.zeroCreate 4 4
-        arr[3, 0] <- 1uy
-        arr
-
     let resultImage =
         let folder st =
             function
@@ -64,6 +59,5 @@ let main argv =
 
         filters |> List.fold folder inImage
 
-    printfn "%A" resultImage
-    //save2DByteArrayAsImage resultImage outFile
+    save2DByteArrayAsImage resultImage outFile
     0
