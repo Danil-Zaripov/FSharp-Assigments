@@ -2,17 +2,27 @@
 
 module ListSorts =
 
-    let bubbleSort lst =
-        let rec _bubbleSort =
-            function
-            | p1 :: p2 :: rest ->
-                if p1 > p2 then
-                    p2 :: (_bubbleSort (p1 :: rest))
-                else
-                    p1 :: (_bubbleSort (p2 :: rest))
-            | rest -> rest
+    let rec insertSorted =
+        function
+        | (x :: xs, v) when v > x -> x :: (insertSorted (xs, v))
+        | (lst, v) -> v :: lst
 
-        List.fold (fun acc _ -> _bubbleSort acc) lst lst
+    let rec insertionSort =
+        function
+        | [] -> []
+        | x :: xs -> insertSorted ((insertionSort xs), x)
+
+
+    let bubbleSort lst =
+        let rec sortUtil acc rev lst =
+            match lst, rev with
+            | [], true -> acc |> List.rev
+            | [], false -> acc |> List.rev |> sortUtil [] true
+            | x :: y :: tl, _ when x > y -> sortUtil (y :: acc) false (x :: tl)
+            | hd :: tl, _ -> sortUtil (hd :: acc) rev tl
+
+        sortUtil [] true lst
+
 
     let rec quickSort =
         function
@@ -22,15 +32,22 @@ module ListSorts =
             let bigger = List.filter ((<=) x) xs
             (quickSort smaller) @ x :: (quickSort bigger)
 
+
+
     let rec mergeSort lst =
-        let rec _merge =
-            function
-            | (x :: xs, y :: ys) ->
-                if x < y then
-                    x :: (_merge (xs, y :: ys))
-                else
-                    y :: (_merge (x :: xs, ys))
-            | (xs, ys) -> max xs ys // max([], lst) = lst // for any lst
+        let merge l1 l2 =
+            let rec _merge lst1 lst2 res =
+                match lst1, lst2 with
+                | [], [] -> List.rev res
+                | [], hd :: tl
+                | hd :: tl, [] -> _merge [] [] ((List.rev (hd :: tl)) @ res)
+                | x :: xs, y :: ys ->
+                    if (x < y) then
+                        _merge (xs) (y :: ys) (x :: res)
+                    else
+                        _merge (x :: xs) (ys) (y :: res)
+
+            _merge l1 l2 []
 
         match lst with
         | p1 :: p2 :: rest ->
@@ -39,9 +56,8 @@ module ListSorts =
                 let p1, p2 = (chunks |> List.head, chunks |> List.tail |> List.exactlyOne)
                 p1, p2
 
-            _merge (mergeSort l1, mergeSort l2)
+            merge (mergeSort l1) (mergeSort l2)
         | _ -> lst
-
 
 module ArraySorts =
     let swap (left: 'a byref) (right: 'a byref) =
@@ -59,7 +75,21 @@ module ArraySorts =
 
         arr
 
+    let insertionSort (arr: 'a array) =
+        let arr = Array.copy arr
+        let n = arr.Length
 
+        for i in 1 .. n - 1 do
+            let key = arr[i]
+            let mutable j = i - 1
+
+            while j >= 0 && arr[j] > key do
+                arr[j + 1] <- arr[j]
+                j <- j - 1
+
+            arr[j + 1] <- key
+
+        arr
 
     let quickSort (arr: 'a array) =
         let partition (arr: 'a array) low high =
