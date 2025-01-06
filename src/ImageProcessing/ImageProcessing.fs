@@ -75,7 +75,9 @@ let edgesKernel =
     |> Array.map (Array.map float32)
 
 let idKernel =
-    [| [| 0; 0; 0 |]; [| 0; 1; 0 |]; [| 0; 0; 0 |] |]
+    [| [| 0; 0; 0 |]
+       [| 0; 1; 0 |]
+       [| 0; 0; 0 |] |]
     |> Array.map (Array.map float32)
 
 let unsharpMaskingKernel =
@@ -87,31 +89,45 @@ let unsharpMaskingKernel =
     |> Array.map (Array.map (fun x -> -(float32 x) / 256.0f))
 
 let ridgeKernel =
-    [| [| 0; -1; 0 |]; [| -1; 4; -1 |]; [| 0; -1; 0 |] |]
+    [| [| 0; -1; 0 |]
+       [| -1; 4; -1 |]
+       [| 0; -1; 0 |] |]
     |> Array.map (Array.map float32)
 
 let topSobelKernel =
-    [| [| 1; 2; 1 |]; [| 0; 0; 0 |]; [| -1; -2; -1 |] |]
+    [| [| 1; 2; 1 |]
+       [| 0; 0; 0 |]
+       [| -1; -2; -1 |] |]
     |> Array.map (Array.map float32)
 
 let sharpenKernel =
-    [| [| 0; -1; 0 |]; [| -1; 5; -1 |]; [| 0; -1; 0 |] |]
+    [| [| 0; -1; 0 |]
+       [| -1; 5; -1 |]
+       [| 0; -1; 0 |] |]
     |> Array.map (Array.map float32)
 
 let outlineKernel =
-    [| [| -1; -1; -1 |]; [| -1; 8; -1 |]; [| -1; -1; -1 |] |]
+    [| [| -1; -1; -1 |]
+       [| -1; 8; -1 |]
+       [| -1; -1; -1 |] |]
     |> Array.map (Array.map float32)
 
 let shiftRightKernel =
-    [| [| 0; 0; 0 |]; [| 1; 0; 0 |]; [| 0; 0; 0 |] |]
+    [| [| 0; 0; 0 |]
+       [| 1; 0; 0 |]
+       [| 0; 0; 0 |] |]
     |> Array.map (Array.map float32)
 
 let shiftDownKernel =
-    [| [| 0; 1; 0 |]; [| 0; 0; 0 |]; [| 0; 0; 0 |] |]
+    [| [| 0; 1; 0 |]
+       [| 0; 0; 0 |]
+       [| 0; 0; 0 |] |]
     |> Array.map (Array.map float32)
 
 let shiftRightDownKenrel =
-    [| [| 1; 0; 0 |]; [| 0; 0; 0 |]; [| 0; 0; 0 |] |]
+    [| [| 1; 0; 0 |]
+       [| 0; 0; 0 |]
+       [| 0; 0; 0 |] |]
     |> Array.map (Array.map float32)
 
 let blackKernel = [| [| 0 |] |] |> Array.map (Array.map float32)
