@@ -79,15 +79,17 @@ module UnitTests =
 
     [<Fact>]
     let checkProduct () =
-        let mat1 = Array2D.create 1 2 0
-        let mat2 = Array2D.create 2 6 2
-        mat1[0, 1] <- 1
+        let mat1 = Array2D.create 2 1 0
+        let mat2 = Array2D.create 1 6 2
 
+        mat1[1, 0] <- 1
         mat2[0, 3] <- 122
+        let expected = Array2D.create 2 6 0
 
-        let expected = Array2D.create 1 6 2
+        for i in 0..5 do
+            expected[1, i] <- 2
 
-
+        expected[1, 3] <- 122
         let tr1 = mat1 |> QuadTree.ofMatrix
         let tr2 = mat2 |> QuadTree.ofMatrix
         let actual = QuadTree.multiply (*) (+) 0 tr1 tr2 |> QuadTree.toMatrix

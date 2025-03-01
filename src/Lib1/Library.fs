@@ -275,88 +275,95 @@ module QuadTree =
         else
             invalidArg "tr1 tr2" "QuadTrees represented matrices with different sizes"
 
-    let multiply opMult opAdd genericZero (tr1: 'a QuadTree) (tr2: 'a QuadTree) =
-        let (n1, m1), (n2, m2) = Bounds.getDims tr1.bounds, Bounds.getDims tr2.bounds
+    let multiply opMult opAdd genericZero tr1 tr2 =
+        let add = map2 opAdd
 
-        if m1 <> n2 then
-            invalidArg "tr1 tr2" "Matrices cannot be multiplied"
-        else
-            let n, k, m = n1, m1, m2
+        let rec _mult tr1 tr2 =
+            let operation
+                { NW = NW1
+                  NE = NE1
+                  SW = SW1
+                  SE = SE1 }
+                { NW = NW2
+                  NE = NE2
+                  SW = SW2
+                  SE = SE2 }
+                =
+                let _mult x y = Option.map2 _mult x y
+                let add = Option.map2 add
 
-            let ret =
-                { bounds = { row = (0, n - 1); col = (0, m - 1) }
-                  tree = Leaf Unchecked.defaultof<'a> }
+                if not (Option.isNone NE1 && Option.isNone SW2) then
+                    let NW = add (_mult NW1 NW2) (_mult NE1 SW2)
+                    let NE = add (_mult NW1 NE2) (_mult NE1 SE2)
+                    let SW = add (_mult SW1 NW2) (_mult SE1 SW2)
+                    let SE = add (_mult SW1 NE2) (_mult SE1 SE2)
 
-            let rec existsSmaller byRow segm tr =
-                let toCheck = if byRow then tr.bounds.row else tr.bounds.col
-
-                if not (isSubSegm toCheck segm || isSubSegm segm toCheck) then
-                    false
+                    { NW = NW; NE = NE; SW = SW; SE = SE }
                 else
-                    match tr.tree with
-                    | Leaf _ -> isHardSubSegm toCheck segm
-                    | Node subs ->
-                        subs.asSeq
-                        |> Seq.map (Option.map (existsSmaller byRow segm))
-                        |> Seq.filter (Option.isSome)
-                        |> Seq.map (Option.get)
-                        |> Seq.reduce (||)
+                    let getNeutralCol (x: Option<QuadTree<'a>>) =
+                        Some
+                            { bounds = { x.Value.bounds with col = (-1, -1) }
+                              tree = Leaf genericZero }
 
-            let rec getMultipliedValue bnd c r =
-                if isSubSegm bnd.row c.bounds.row && isSubSegm bnd.col r.bounds.col then
-                    match c.tree, r.tree with
-                    | Leaf x, Leaf y when oneIsSubSegm c.bounds.col r.bounds.row ->
-                        let ml = min (getSegmentLength c.bounds.col) (getSegmentLength r.bounds.row)
-                        let multiplied = opMult x y
-                        let value = seq { for _ in 1..ml -> multiplied } |> Seq.reduce opAdd
-                        Some(value)
-                    | Leaf x, Node(subs) ->
-                        Some(
-                            subs.asSeq
-                            |> Seq.map (Option.bind (getMultipliedValue bnd c))
-                            |> Seq.filter Option.isSome
-                            |> Seq.map Option.get
-                            |> Seq.fold opAdd genericZero
-                        )
-                    | Node(subs), _ ->
-                        let _map (tr: 'a QuadTree option) =
-                            match tr with
-                            | Some(tr) -> getMultipliedValue bnd tr r
-                            | None -> None
+                    let getNeutralRow (x: Option<QuadTree<'a>>) =
+                        Some
+                            { bounds = { x.Value.bounds with row = (-1, -1) }
+                              tree = Leaf genericZero }
 
-                        Some(
-                            subs.asSeq
-                            |> Seq.map _map
-                            |> Seq.filter Option.isSome
-                            |> Seq.map Option.get
-                            |> Seq.fold opAdd genericZero
-                        )
-                    | _ -> None
+                    let NE1 = getNeutralCol NW1
+                    let SE1 = getNeutralCol SW1
+                    let SW2 = getNeutralRow NW2
+                    let SE2 = getNeutralRow NE2
 
-                else
-                    None
+                    let NW = add (_mult NW1 NW2) (_mult NE1 SW2)
+                    let NE = add (_mult NW1 NE2) (_mult NE1 SE2)
+                    let SW = add (_mult SW1 NW2) (_mult SE1 SW2)
+                    let SE = add (_mult SW1 NE2) (_mult SE1 SE2)
 
-            let rec divideUntilSmallEnough mine =
-                if
-                    existsSmaller true mine.bounds.row tr1
-                    || existsSmaller false mine.bounds.col tr2
-                then
-                    let mine = divideLeaf mine
+                    { NW = NW; NE = NE; SW = SW; SE = SE }
 
-                    match mine.tree with
-                    | Node(subs) ->
-                        let subs = SubNodes.map (divideUntilSmallEnough) subs
+            let isOneByOne tr =
+                getSegmentLength tr.bounds.row = 1 && getSegmentLength tr.bounds.col = 1
 
-                        { bounds = mine.bounds
-                          tree = Node(subs) }
-                    | _ -> failwith "Pattern impossible to reach"
-                else
-                    let value =
-                        match getMultipliedValue mine.bounds tr1 tr2 with
-                        | Some x -> x
-                        | None -> failwith "Multiplying went a wrong way"
+            let rec constantMult c bnd byRow tr =
+                match tr.tree with
+                | Node subs ->
+                    { bounds =
+                        { row = (if byRow then bnd else tr.bounds.row)
+                          col = (if byRow then tr.bounds.col else bnd) }
+                      tree = Node(SubNodes.map (constantMult c bnd byRow) subs) }
+                | Leaf x ->
+                    { bounds =
+                        { row = (if byRow then bnd else tr.bounds.row)
+                          col = (if byRow then tr.bounds.col else bnd) }
+                      tree = Leaf(opMult x c) }
 
-                    { bounds = mine.bounds
-                      tree = Leaf value }
+            match tr1.tree, tr2.tree with
+            | Node subs1, Node subs2 ->
+                let res = operation subs1 subs2
 
-            divideUntilSmallEnough ret
+                let tr =
+                    if Option.isSome res.NE || Option.isSome res.SW then
+                        Node res
+                    else
+                        (Option.get res.NW).tree
+
+                { bounds =
+                    { row = tr1.bounds.row
+                      col = tr2.bounds.col }
+                  tree = tr }
+            | Node subs, Leaf x when isOneByOne tr2 -> constantMult x tr2.bounds.col false tr1
+            | Leaf x, Node subs when isOneByOne tr1 -> constantMult x tr1.bounds.row true tr2
+            | Node _, Leaf _ -> _mult tr1 (divideLeaf tr2)
+            | Leaf _, Node _ -> _mult (divideLeaf tr1) (tr2)
+            | Leaf x, Leaf y ->
+                let value =
+                    seq { for _ in 1 .. (getSegmentLength tr1.bounds.col) -> opMult x y }
+                    |> Seq.reduce opAdd
+
+                { bounds =
+                    { row = tr1.bounds.row
+                      col = tr2.bounds.col }
+                  tree = Leaf value }
+
+        _mult tr1 tr2
