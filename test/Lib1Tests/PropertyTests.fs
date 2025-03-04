@@ -2,44 +2,71 @@
 
 open FsCheck
 open FsCheck.Xunit
-open Trees
+open ImageProcessing
 
 
 [<Properties(MaxTest = 100)>]
 module PropertyTests =
 
     [<Property>]
-    let checkMap (tree: int MyTree) =
-        let expected = (tree |> MyTree.sum) * 5
-
-        let actual = tree |> MyTree.map ((*) 5) |> MyTree.sum
-
-        expected = actual
-
-    [<Property>]
-    let checkIdentityMap (tree: int MyTree) =
-        let expected = tree
-        let actual = tree |> MyTree.map (fun x -> x)
+    let checkIdentityFilter (data: byte[,]) =
+        let expected = Array2D.copy data
+        let actual = applyFilter idKernel data
 
         expected = actual
 
     [<Property>]
-    let foldBackEqualToFoldFrontForAddition (tree: int MyTree) =
-        let foldedBackwards = 0 |> MyTree.foldBack (+) tree
-        let foldedForwards = tree |> MyTree.fold (+) 0
-
-        foldedBackwards = foldedForwards
-
-    [<Property>]
-    let mapDoesNotChangeHeight (tree: int MyTree) (f: int -> int) =
-        let expected = tree |> MyTree.height
-        let actual = tree |> MyTree.map f |> MyTree.height
+    let checkBlackFilter (data: byte[,]) =
+        let expected = Array2D.zeroCreate (Array2D.length1 data) (Array2D.length2 data)
+        let actual = applyFilter blackKernel data
 
         expected = actual
 
     [<Property>]
-    let leafNumberDoesNotChange (tree: int MyTree) (f: int -> int) =
-        let expected = tree |> MyTree.leafNumber
-        let actual = tree |> MyTree.map f |> MyTree.leafNumber
+    let checkWhiteFilter (data: byte[,]) =
+        let expected = data |> Array2D.map (fun x -> if x > 0uy then 255uy else 0uy)
+        let actual = applyFilter whiteKernel data
+
+        expected = actual
+
+    [<Property>]
+    let sizeDoesntChange (data: byte[,]) (f: float32 -> float32) =
+        let filter =
+            let rand = System.Random()
+            let randomize _ = rand.Next(-100, 100)
+            gaussianBlurKernel |> Array.map (Array.map (randomize >> float32 >> f))
+
+        let expected = Array2D.length1 data, Array2D.length2 data
+
+        let actual =
+            let filtered = data |> applyFilter filter
+            Array2D.length1 filtered, Array2D.length2 filtered
+
+        expected = actual
+
+    [<Property>]
+    let shiftingIsAssociative (data: byte[,]) =
+        let actual = data |> applyFilter shiftRightDownKenrel
+        let expected = data |> applyFilter shiftDownKernel |> applyFilter shiftRightKernel
+        let n, m = Array2D.length1 data, Array2D.length2 data
+        (expected[1 .. n - 2, 1 .. m - 2] = actual[1 .. n - 2, 1 .. m - 2])
+
+    [<Property>]
+    let shiftingIsCommutative (data: byte[,]) =
+        let downRight = data |> applyFilter shiftDownKernel |> applyFilter shiftRightKernel
+        let rightDown = data |> applyFilter shiftRightKernel |> applyFilter shiftDownKernel
+
+        downRight = rightDown
+
+    [<Property>]
+    let expandedFormIsTheSame (data: byte[,]) (f: float32 -> float32) =
+        let filter =
+            let rand = System.Random()
+            let randomize _ = rand.Next(-100, 100)
+            gaussianBlurKernel |> Array.map (Array.map (randomize >> float32 >> f))
+
+        let expanded = expand 3 filter
+        let expected = data |> applyFilter filter
+        let actual = data |> applyFilter expanded
 
         expected = actual
