@@ -9,8 +9,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="PropertyTests.fs" />
     <Compile Include="UnitTests.fs" />
+    <Compile Include="PropertyTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
@@ -30,5 +30,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Lib1\Learning.fsproj" />
+    <ProjectReference Include="..\..\src\ImageProcessing\ImageProcessing.fsproj" />
   </ItemGroup>
 </Project>
