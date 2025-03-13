@@ -28,6 +28,7 @@
 		</PackageReference>
 	</ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Graphs\Graphs.fsproj" />
     <ProjectReference Include="..\..\src\ImageProcessing\ImageProcessing.fsproj" />
   </ItemGroup>
 </Project>
