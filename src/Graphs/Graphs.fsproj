@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="DinearAlgebra" Version="1.0.0" />
+    <PackageReference Include="DinearAlgebra" Version="0.0.4-alpha" />
   </ItemGroup>
 
 </Project>
